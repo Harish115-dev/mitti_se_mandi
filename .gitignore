@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.Python
+venv/
+env/
+.venv/
+
+# Environment / secrets
+.env
+
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+ml/saved_models/*
+!ml/saved_models/.gitkeep
+
+# Database
+*.db
+*.sqlite3
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Generated audio (voice assistant responses)
+app/static/audio/*
+!app/static/audio/.gitkeep
+
+# OS/editor junk
+.DS_Store
+.vscode/
+.idea/
+*.swp
