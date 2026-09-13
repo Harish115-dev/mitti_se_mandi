@@ -1,0 +1,1077 @@
+
+:root {
+    /* Logo Size */
+    --logo-size: 55px; 
+    
+    /* Navbar Border - Change color or thickness here */
+    --nav-border: 1px solid #E0DCD3; 
+    
+    /* Colors */
+    --bg-color: #FDFBF7;
+    --brand-dark-brown: #3E2723;
+    --brand-light-brown: #8D6E63;
+    --brand-green: #2E6B3E;
+    --brand-green-hover: #23522f;
+    --logo-bg: #E6EFE6;
+    --logo-border: #4A6B48;
+}
+
+/* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Removed top padding so navbar touches top of screen */
+}
+
+/* Navbar Container */
+.navbar {
+    width: 100%;
+    max-width: 1400px;
+    background-color: var(--bg-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 40px; /* Increased padding slightly for better spacing */
+    
+    /* --- THE NEW BORDER --- */
+    border-bottom: var(--nav-border);
+}
+
+/* --- LOGO SECTION --- */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+}
+
+/* Container automatically uses the --logo-size variable */
+.logo-container {
+    width: var(--logo-size);
+    height: var(--logo-size);
+    background-color: var(--logo-bg);
+    border: 2px solid var(--logo-border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* The Logo Image */
+.brand-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 15%; 
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-name {
+    font-family: 'Georgia', serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--brand-dark-brown);
+    line-height: 1.1;
+}
+
+.brand-tagline {
+    font-size: 12px;
+    color: var(--brand-light-brown);
+    font-weight: 500;
+}
+
+/* --- NAVIGATION LINKS --- */
+.nav-links {
+    display: flex;
+    gap: 30px;
+    list-style: none;
+}
+
+.nav-links li a {
+    text-decoration: none;
+    color: #1a1a1a;
+    font-weight: 600;
+    font-size: 16px;
+    transition: color 0.2s ease;
+}
+
+.nav-links li a:hover {
+    color: var(--logo-border);
+}
+
+/* --- RIGHT SIDE CONTROLS --- */
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* Language Switcher */
+.lang-switch {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--brand-light-brown);
+    border-radius: 25px;
+    padding: 2px;
+    background-color: white;
+}
+
+.lang-btn {
+    border: none;
+    background: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--brand-light-brown);
+    transition: all 0.2s ease;
+}
+
+.lang-btn.active {
+    background-color: #4A3728;
+    color: white;
+}
+
+/* Login Button */
+.login-btn {
+    background-color: var(--brand-green);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.login-btn:hover {
+    background-color: var(--brand-green-hover);
+}
+
+/* =========================================
+   AUTH DROPDOWN MENU STYLES
+   ========================================= */
+
+.auth-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dropdown-toggle .arrow {
+    font-size: 10px;
+    transition: transform 0.3s ease;
+}
+
+/* Rotate arrow on hover */
+.auth-dropdown:hover .arrow {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #FFFFFF;
+    min-width: 160px;
+    box-shadow: 0 8px 20px rgba(62, 39, 35, 0.15);
+    border-radius: 6px;
+    padding: 8px 0;
+    margin-top: 8px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    border: 1px solid #E0DCD3;
+}
+
+/* Show dropdown on hover */
+.auth-dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Show dropdown when .show class is toggled (for mobile) */
+.dropdown-menu.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item {
+    display: block;
+    padding: 12px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #3E2723; /* Dark Brown */
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #F5EBE0; /* Light brown hover */
+    color: #2E6B3E; /* Green on hover */
+}
+
+/* Divider between Login and Register */
+.dropdown-item:first-child {
+    border-bottom: 1px solid #F0EBE3;
+}
+
+
+
+
+
+
+/* =========================================
+   HERO SECTION STYLES
+   ========================================= */
+.hero-section {
+    width: 100%;
+    background: linear-gradient(90deg, #3E3D32 0%, #727761 40%, #D2D8B9 100%);
+    padding: 80px 40px;
+    display: flex;
+    justify-content: center;
+    overflow: hidden; 
+}
+
+.hero-container {
+    width: 100%;
+    max-width: 1400px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 50px;
+}
+
+.hero-content { flex: 1; max-width: 650px; color: #ffffff; }
+.hero-subtitle { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; margin-bottom: 24px; color: #E6E4D9; }
+.hero-subtitle .line { display: inline-block; width: 30px; height: 3px; background-color: #6D8C5A; border-radius: 2px; }
+.hero-title { font-family: 'Georgia', serif; font-size: 56px; line-height: 1.1; font-weight: 700; margin-bottom: 24px; color: #F4F2EB; }
+.hero-description { font-size: 18px; line-height: 1.6; color: #D1D1C6; max-width: 500px; }
+
+
+/* --- RIGHT SIDE: IMAGE SLIDER --- */
+.hero-visual {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    /* Set a fixed height so the layout doesn't jump when images change */
+    height: 450px; 
+}
+
+.sun-shape {
+    position: absolute;
+    top: -100px;
+    right: 0px;
+    width: 300px;
+    height: 300px;
+    background-color: #E8C68A;
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* The Container holding the stacked images */
+.slider-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    z-index: 2;
+}
+
+/* Base style for all slider images */
+.slider-image {
+    position: absolute;
+    bottom: 0;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    
+    /* Hides images by default */
+    opacity: 0; 
+    visibility: hidden;
+    
+    /* Smooth fade transition */
+    transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+}
+
+/* The 'active' class makes the image visible */
+.slider-image.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 992px) {
+    .hero-container { flex-direction: column; text-align: center; }
+    .hero-subtitle { justify-content: center; }
+    .hero-title { font-size: 40px; }
+    .hero-visual { width: 100%; height: 350px; margin-top: 40px; }
+    .sun-shape { width: 200px; height: 200px; top: -50px; right: 10%; }
+}
+
+
+/* =========================================
+   ABOUT US SECTION STYLES
+   ========================================= */
+
+.about-section {
+    width: 100%;
+    background-color: #F8F3EA; /* Creamy off-white background */
+    padding: 100px 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.about-container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    align-items: center; /* Vertically centers the text next to the image */
+    justify-content: space-between;
+    gap: 80px;
+}
+
+/* --- LEFT SIDE: YOUR PHOTO --- */
+.about-visual {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    max-width: 500px;
+}
+
+/* The Outer Beige Box */
+.graphic-box {
+    width: 100%;
+    aspect-ratio: 1 / 1; /* Keeps it a perfect square */
+    background-color: #EAE3D5; /* The beige box color */
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px; /* Creates the gap between the beige box and your photo */
+    box-sizing: border-box;
+}
+
+/* YOUR IMAGE */
+.about-image {
+    width: 100%;
+    height: 100%;
+    
+    /* CRITICAL: This prevents the image from turning into a giant white block */
+    object-fit: contain; 
+    
+    background-color: #FDFBF7; /* Inner white background */
+    border: 1px solid #E0DCD3; /* Subtle border around the white box */
+    border-radius: 4px;
+    
+    /* Adds the soft shadow behind the image like the reference */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); 
+    display: block;
+}
+
+/* --- RIGHT SIDE: TEXT CONTENT --- */
+.about-content {
+    flex: 1;
+    max-width: 600px;
+    padding-top: 20px;
+}
+
+.about-label {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: #3E5E3A; /* Dark green */
+    margin-bottom: 12px;
+}
+
+.about-title {
+    font-family: 'Georgia', serif;
+    font-size: 42px;
+    line-height: 1.2;
+    color: #3E2723; /* Dark Brown */
+    font-weight: 700;
+    margin-bottom: 24px;
+}
+
+.about-description {
+    font-size: 17px;
+    line-height: 1.7;
+    color: #555555;
+    margin-bottom: 40px;
+}
+
+/* Numbered List Styling */
+.about-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.about-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.list-number {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border: 1px solid #A3B899; /* Light green outline */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: #3E5E3A;
+    margin-top: 2px;
+}
+
+.list-text h4 {
+    font-size: 18px;
+    color: #3E2723;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.list-text p {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #666666;
+    margin: 0;
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 992px) {
+    .about-container {
+        flex-direction: column;
+        align-items: center;
+        gap: 50px;
+    }
+    
+    .about-visual {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .about-content {
+        text-align: center;
+    }
+
+    .about-list li {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+
+/* =========================================
+   HOW IT WORKS SECTION STYLES
+   ========================================= */
+
+.how-it-works-section {
+    width: 100%;
+    background-color: #F8F3EA; /* Matches the background from your image */
+    padding: 80px 40px 100px 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.hiw-container {
+    width: 100%;
+    max-width: 1200px;
+}
+
+/* --- HEADER AREA --- */
+.hiw-header {
+    margin-bottom: 60px;
+}
+
+.hiw-label {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: #4A6B48; /* Dark Green */
+    margin-bottom: 12px;
+}
+
+.hiw-title {
+    font-family: 'Georgia', serif;
+    font-size: 44px;
+    color: #3E2723; /* Dark Brown */
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.hiw-description {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #666666;
+    max-width: 600px;
+}
+
+/* --- 5 COLUMN GRID --- */
+.hiw-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    /* A very subtle background so the borders show clearly, mimicking the box look */
+    background-color: transparent; 
+    border-top: 1px solid #E0DCD3;
+    border-bottom: 1px solid #E0DCD3;
+}
+
+.hiw-card {
+    padding: 40px 24px;
+    /* The vertical separator lines */
+    border-right: 1px solid #E0DCD3; 
+}
+
+/* Remove the right border from the very last card */
+.hiw-card:last-child {
+    border-right: none;
+}
+
+/* --- CARD CONTENT --- */
+.hiw-number {
+    font-family: 'Georgia', serif;
+    font-size: 40px;
+    font-weight: 700;
+    color: #C8D6C0; /* Light green/pale green */
+    margin-bottom: 24px;
+    line-height: 1;
+}
+
+.hiw-card-title {
+    font-family: 'Georgia', serif;
+    font-size: 18px;
+    color: #3E2723; /* Dark Brown */
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.hiw-card-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #666666;
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 1024px) {
+    /* Switch to a 3-column layout on medium screens */
+    .hiw-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    /* Fix borders for wrapping grid */
+    .hiw-card:nth-child(3) {
+        border-right: none;
+    }
+    .hiw-card:nth-child(4), .hiw-card:nth-child(5) {
+        border-top: 1px solid #E0DCD3;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Stack into a single column on mobile */
+    .hiw-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .hiw-card {
+        border-right: none;
+        border-bottom: 1px solid #E0DCD3;
+        padding: 30px 0;
+    }
+    
+    .hiw-card:last-child {
+        border-bottom: none;
+    }
+    
+    .hiw-title {
+        font-size: 36px;
+    }
+}
+
+
+/* =========================================
+   CTA BANNER SECTION STYLES
+   ========================================= */
+
+.cta-banner-section {
+    width: 100%;
+    /* The specific light green background from the image */
+    background-color: #DEE5CE; 
+    padding: 100px 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.cta-container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 40px;
+}
+
+/* --- LEFT SIDE: TEXT --- */
+.cta-content {
+    flex: 1;
+    max-width: 550px;
+}
+
+.cta-title {
+    font-family: 'Georgia', serif;
+    font-size: 38px;
+    line-height: 1.3;
+    color: #3E2723; /* Dark Brown */
+    font-weight: 700;
+    margin: 0;
+}
+
+/* --- RIGHT SIDE: BUTTONS --- */
+.cta-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+/* Base Button Styles */
+.btn {
+    display: inline-block;
+    padding: 14px 28px;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+/* Primary Button (Dark Green) */
+.btn-primary {
+    background-color: #2E6B3E; /* Deep Green */
+    color: #ffffff;
+    border: 1px solid #2E6B3E;
+}
+
+.btn-primary:hover {
+    background-color: #23522f;
+    border-color: #23522f;
+}
+
+/* Secondary Button (Transparent with Border) */
+.btn-secondary {
+    background-color: transparent;
+    color: #3E2723; /* Dark Brown */
+    border: 1px solid #3E2723;
+}
+
+.btn-secondary:hover {
+    background-color: rgba(62, 39, 35, 0.05); /* Slight dark overlay on hover */
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 992px) {
+    .cta-container {
+        flex-direction: column;
+        text-align: center;
+        gap: 40px;
+    }
+    
+    .cta-title {
+        font-size: 32px;
+    }
+}
+
+@media (max-width: 576px) {
+    .cta-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+}
+
+
+/* =========================================
+   CONTACT SECTION STYLES
+   ========================================= */
+
+.contact-section {
+    width: 100%;
+    background-color: #F9F5EE; /* Slightly warmer cream background */
+    padding: 100px 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.contact-container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: space-between;
+    gap: 80px;
+}
+
+/* --- LEFT SIDE: INFO --- */
+.contact-info {
+    flex: 1;
+    max-width: 500px;
+    padding-top: 10px;
+}
+
+.contact-label {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    color: #3E5E3A; /* Dark Green */
+    margin-bottom: 16px;
+}
+
+.contact-title {
+    font-family: 'Georgia', serif;
+    font-size: 40px;
+    line-height: 1.2;
+    color: #3E2723; /* Dark Brown */
+    font-weight: 700;
+    margin-bottom: 24px;
+}
+
+.contact-description {
+    font-size: 17px;
+    line-height: 1.6;
+    color: #555555;
+    margin-bottom: 48px;
+}
+
+.contact-details {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.detail-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: #3E5E3A; /* Dark Green */
+}
+
+.detail-value {
+    font-size: 17px;
+    color: #3E2723;
+}
+
+/* --- RIGHT SIDE: FORM --- */
+.contact-form-wrapper {
+    flex: 1;
+    max-width: 550px;
+}
+
+.contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 15px;
+    font-weight: 700;
+    color: #3E2723; /* Dark Brown */
+}
+
+/* Input & Textarea Styling */
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-family: inherit;
+    color: #3E2723;
+    background-color: #FDFBF7; /* Matches overall site background */
+    border: 1px solid #9B7B6B; /* Muted brownish border */
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+    color: #A89F91; /* Light placeholder text */
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #3E5E3A; /* Dark green on focus */
+}
+
+.form-group textarea {
+    resize: vertical; /* Allows user to resize height only */
+    min-height: 120px;
+}
+
+.form-note {
+    font-size: 14px;
+    color: #777777;
+    margin-top: -8px;
+}
+
+/* Submit Button */
+.submit-btn {
+    align-self: flex-start;
+    background-color: #2E6B3E; /* Deep Green matching your brand */
+    color: #ffffff;
+    border: none;
+    padding: 14px 28px;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-top: 8px;
+}
+
+.submit-btn:hover {
+    background-color: #23522f;
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 992px) {
+    .contact-container {
+        flex-direction: column;
+        gap: 60px;
+    }
+
+    .contact-info {
+        max-width: 100%;
+        text-align: center;
+    }
+    
+    .contact-title {
+        font-size: 34px;
+    }
+
+    .contact-form-wrapper {
+        max-width: 100%;
+    }
+
+    .submit-btn {
+        width: 100%; /* Full width button on mobile */
+    }
+}
+
+
+/* =========================================
+   FOOTER SECTION STYLES
+   ========================================= */
+
+.footer-section {
+    width: 100%;
+    background-color: #3B2C24; /* Dark brown */
+    color: #E8E2D9; /* Warm off-white text */
+    padding: 80px 40px 40px 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.footer-container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* --- TOP AREA: 4 COLUMNS --- */
+.footer-top {
+    display: grid;
+    /* 4 columns: Brand wider, 3 links smaller */
+    grid-template-columns: 2fr 1fr 1fr 1fr; 
+    gap: 40px;
+    padding-bottom: 60px;
+    border-bottom: 1px solid rgba(232, 226, 217, 0.15);
+}
+
+/* Column 1: Brand */
+.footer-logo {
+    font-family: 'Georgia', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 16px;
+}
+
+.footer-tagline {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #C9C1B8;
+    max-width: 350px;
+}
+
+/* Columns 2, 3, 4: Headings */
+.footer-heading {
+    font-size: 16px;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 24px;
+}
+
+/* Columns 2, 3, 4: Lists */
+.footer-links ul,
+.footer-account ul,
+.footer-contact ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Remove bullets explicitly */
+.footer-links li,
+.footer-account li,
+.footer-contact li {
+    list-style: none;
+}
+
+/* Link Styling */
+.footer-links a,
+.footer-account a,
+.footer-contact a {
+    text-decoration: none;
+    font-size: 16px;
+    color: #C9C1B8; /* Normal state: muted cream */
+    transition: color 0.2s ease;
+}
+
+/* Override default visited link colors (blue/purple) */
+.footer-links a:visited,
+.footer-account a:visited,
+.footer-contact a:visited {
+    color: #C9C1B8;
+}
+
+/* Hover state: bright cream */
+.footer-links a:hover,
+.footer-account a:hover,
+.footer-contact a:hover {
+    color: #F5EBE0;
+}
+
+.footer-links a:visited:hover,
+.footer-account a:visited:hover,
+.footer-contact a:visited:hover {
+    color: #F5EBE0;
+}
+
+/* --- BOTTOM AREA: COPYRIGHT --- */
+.footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 30px;
+    font-size: 14px;
+    color: #A89F91;
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 992px) {
+    .footer-top {
+        /* Tablet: 2 columns */
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .footer-brand {
+        grid-column: 1 / -1; /* Brand full width */
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .footer-top {
+        /* Mobile: 1 column */
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 992px) {
+    .footer-top {
+        /* Stack into 2 columns on tablets */
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .footer-brand {
+        grid-column: 1 / -1; /* Make brand span full width */
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .footer-top {
+        /* Stack into 1 column on mobile */
+        grid-template-columns: 1fr;
+        gap: 50px;
+    }
+
+    .footer-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}

@@ -160,66 +160,68 @@ Historical daily mandi price and arrival data for Maharashtra (2021–2026), col
 - [ ] Lot/offer/payment/dispute workflow
 
 
+go file by  file  with minimum description
 
+run.py — starts the Flask app
+app/__init__.py — creates app, loads models, registers all routes
+app/config.py — stores settings (DB path, API keys, transport rate)
+Routes
 
-Root level
-requirements.txt — pinned Python package versions (Flask, pandas, xgboost, whisper, etc.) so pip install -r requirements.txt sets up an identical environment for every teammate.
-.env.example — a template listing which environment variables the app needs (API keys, DB path) without containing real secrets. Teammates copy it to .env and fill in their own values.
-.gitignore — tells git which files/folders to never commit (secrets, generated data, trained models, caches).
-run.py — the single command that starts the app (python run.py). Creates the Flask app via the factory in app/__init__.py and runs the dev server.
-app/ — the Flask application
-app/__init__.py — the "app factory." Builds the Flask app object, initializes the database, loads trained models into memory once at startup, and registers every blueprint (route file) so the app knows all its endpoints exist.
-app/config.py — central settings: database file path, model directory, LLM API key, the transport-cost-per-km constant used in mandi recommendations. Change a setting here once instead of hunting through route files.
-app/routes/ — one file per feature, each defines the actual URL endpoints
-forecast.py — /forecast/<crop>/<mandi> (next-week price), /history/<crop>/<mandi> (past prices for the chart)
-recommend.py — /recommend/<crop> — ranks nearby mandis by net price (predicted price minus transport cost)
-advisory.py — /advisory/<crop>/<mandi> — "hold" or "sell now" recommendation based on price trend
-listings.py — lets a farmer create/view produce listings (crop, quantity, grade, location)
-buyers.py — lets a buyer register/view their crop interest and location; carries the "verified" badge
-matching.py — /match/<crop> — runs the rule-based farmer-buyer matching logic
-offers.py — buyer creates an offer on a listing; farmer accepts/rejects it
-payments.py — updates payment status (unpaid/paid) on an accepted offer
-disputes.py — lets someone raise a grievance ticket against an offer
-lots.py — groups multiple farmers' same-crop-and-grade listings into one FPO-sellable "lot"
-voice.py — the endpoint the voice assistant hits: takes an audio file, returns a spoken/text answer
-app/models/ — the decision-making logic (not database models — "ML/business logic")
-forecasting_model.py — loads the trained .pkl files from ml/saved_models/ into memory and exposes a predict() function
-recommendation_engine.py — the actual net-price math (distance × transport rate, subtracted from predicted price)
-matching_engine.py — the filtering logic that decides which buyers match which listings
-advisory_engine.py — turns a price trend into a plain-English "hold" or "sell" suggestion
-llm_assistant.py — builds the prompt sent to the LLM for the voice assistant, injecting real forecast numbers so it answers from data, not guesswork
-app/db/
-schema.sql — the SQL CREATE TABLE statements for listings, buyers, offers, disputes, lots — this is your entire database structure in one file
-database.py — a small helper that opens/closes the SQLite connection and runs schema.sql once when the app first starts
-app/services/ — code that talks to something outside your own app
-agmarknet_loader.py — reads the processed price data file and builds the "latest feature row" the model needs to make one prediction
-stt_service.py — sends an audio file to Whisper, gets back transcribed text
-tts_service.py — sends text to a text-to-speech engine, gets back an audio file
-app/utils/
-geo.py — one function (haversine distance) that calculates the distance between two lat/lon points. Used by both the recommendation engine (mandi distance) and the matching engine (buyer distance).
-app/mock_data/
-buyers.json — a hand-written sample list of buyers (name, crop interest, location, verified status) so the demo has believable buyers without needing real signups
-logistics_partners.json — a similar sample list for the "transport/logistics options" part of the problem statement, shown as static reference data rather than a live booking integration
-app/templates/ and app/static/
-templates/ — HTML page templates, if you render pages directly from Flask instead of building a separate frontend app
-static/ — CSS, JavaScript, and generated files (like the voice assistant's spoken-response audio clips) served directly to the browser
-data/ — everything data-related
-data/raw/ — untouched CSV exports exactly as downloaded from Agmarknet/India Data Portal. Never edited by hand — new files just get added here.
-data/processed/ — the one cleaned, feature-engineered file (weekly_features.parquet) that the training script actually reads. This is the pipeline's output, regenerated by re-running build_dataset.py.
-data/scraper/agmarknet_scraper.py — a script to pull fresh price data directly from Agmarknet's site/API, if you build one, as an alternative/supplement to manually downloading CSVs.
-data/config/target_crops_markets.yaml — the editable list of which crops and markets the pipeline should keep, plus any market-name aliases to merge. This is the file you change to expand coverage, instead of touching code.
-data/notebooks/ — Jupyter notebooks for exploratory work: cleaning experiments, visualizing trends, trying out different model approaches before finalizing what goes into the real pipeline scripts.
-ml/ — model training (offline, not called per web request)
-build_dataset.py — the data pipeline: ingests raw CSVs, cleans them, filters to your configured crops/markets, aggregates to weekly, engineers features, writes the processed parquet file.
-train_forecast_model.py — trains one XGBoost model per crop-mandi pair, evaluates it with a time-based train/test split, saves the result.
-saved_models/ — where the trained .pkl model files land; this is what app/models/forecasting_model.py loads at app startup.
-evaluate.py — a script for deeper backtesting/error analysis, useful for generating accuracy numbers and charts for your pitch deck.
-tests/
-test_forecasting.py — checks the forecasting model returns sane output (right shape, plausible price range) rather than crashing or returning garbage
-test_matching.py — checks the matching logic actually filters correctly (right crop, enough quantity, within distance)
-test_offers.py — checks the offer state machine behaves correctly (can't mark payment on a pending offer, can't accept an already-rejected offer, etc.)
-docs/
-architecture.png — the system diagram showing how the pieces connect
-pitch_deck.pptx — your SIH presentation slides
-problem_statement.md — the official SIH26132 text, kept for reference so anyone on the team can re-check requirements without hunting for the original PDF
-feature_ps_mapping.md — the table mapping each feature you built to the specific line in the official problem statement it satisfies — this is what you'll actually walk judges through
+forecast.py — returns predicted price + history
+recommend.py — ranks mandis by price minus transport cost
+advisory.py — returns hold/sell suggestion
+listings.py — create/view farmer listings
+buyers.py — create/view buyers
+matching.py — returns matching buyer-listing pairs
+offers.py — create offer, accept/reject
+payments.py — mark offer as paid
+disputes.py — raise a dispute
+lots.py — group listings into one lot
+voice.py — audio in → transcribe → predict → answer → speak out
+Models (logic)
+
+forecasting_model.py — loads models, predicts price
+recommendation_engine.py — distance + net-price math
+matching_engine.py — filters listings/buyers by crop/qty/distance
+advisory_engine.py — turns price trend into hold/sell text
+llm_assistant.py — builds prompt, calls LLM
+DB
+
+schema.sql — table definitions
+database.py — opens/closes DB connection
+Services
+
+agmarknet_loader.py — reads processed data, builds feature row
+stt_service.py — speech-to-text
+tts_service.py — text-to-speech
+Utils
+
+geo.py — distance calculation
+Mock data
+
+buyers.json — sample buyers
+logistics_partners.json — sample transport options
+Data
+
+raw/ — original CSVs
+processed/ — cleaned weekly dataset
+scraper/agmarknet_scraper.py — pulls data from Agmarknet
+config/target_crops_markets.yaml — which crops/markets to use
+notebooks/ — exploration/experiments
+ML
+
+build_dataset.py — cleans + engineers features
+train_forecast_model.py — trains model per crop-mandi
+saved_models/ — trained model files
+evaluate.py — accuracy/backtesting
+Tests
+
+test_forecasting.py — checks model output is sane
+test_matching.py — checks match filter works
+test_offers.py — checks offer status transitions are valid
+Docs
+
+architecture.png — system diagram
+pitch_deck.pptx — presentation
+problem_statement.md — official PS text
+feature_ps_mapping.md — feature-to-requirement table

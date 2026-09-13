@@ -1,0 +1,184 @@
+/* =========================================
+   LOGIN PAGE STYLES (LIGHT PURPLE THEME)
+   ========================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #F3F0FA; /* Very light purple background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 40px 20px;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 450px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* --- HEADER AREA --- */
+.login-header {
+    text-align: left;
+}
+
+.login-header h1 {
+    font-family: 'Georgia', serif;
+    font-size: 26px;
+    color: #4A3B6B; /* Deep purple/brown text */
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* --- LOGIN CARD --- */
+.login-card {
+    background-color: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(107, 78, 155, 0.1); /* Soft purple shadow */
+    padding: 50px 40px;
+    border: 1px solid #E0D4F5; /* Light purple border */
+}
+
+.welcome-title {
+    font-family: 'Georgia', serif;
+    font-size: 24px;
+    color: #4A3B6B; /* Deep purple */
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.welcome-subtitle {
+    font-size: 15px;
+    color: #8C7BAE; /* Muted purple */
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+/* --- FORM INPUTS --- */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #4A3B6B;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-family: inherit;
+    color: #4A3B6B;
+    background-color: #FDFBFF; /* Very light purple/white background */
+    border: 1px solid #D1C4E9; /* Light purple border */
+    border-radius: 6px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.form-group input::placeholder {
+    color: #B0A3C9; /* Light purple placeholder */
+}
+
+.form-group input:focus {
+    border-color: #6B4E9B; /* Deep purple on focus */
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(107, 78, 155, 0.15);
+}
+
+/* --- FORGOT PASSWORD --- */
+.forgot-password {
+    text-align: right;
+    margin-top: -8px;
+}
+
+.forgot-password a {
+    font-size: 14px;
+    color: #6B4E9B; /* Deep purple */
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.forgot-password a:hover {
+    color: #4A3B6B;
+    text-decoration: underline;
+}
+
+/* --- LOGIN BUTTON --- */
+.login-btn {
+    background-color: #6B4E9B; /* Deep purple button */
+    color: #FFFFFF;
+    border: none;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-top: 10px;
+    text-transform: uppercase;
+}
+
+.login-btn:hover {
+    background-color: #523A78; /* Darker purple on hover */
+}
+
+/* --- REGISTER LINK --- */
+.register-link {
+    text-align: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #E0D4F5; /* Light purple divider */
+}
+
+.register-link p {
+    font-size: 15px;
+    color: #8C7BAE;
+    margin-bottom: 6px;
+}
+
+.register-link a {
+    font-size: 15px;
+    font-weight: 700;
+    color: #6B4E9B;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.register-link a:hover {
+    color: #4A3B6B;
+    text-decoration: underline;
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 30px 20px;
+    }
+    .login-header h1 {
+        font-size: 22px;
+    }
+}

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Mitti Se Mandi</title>
+    <!-- Linking the separate CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/register.css') }}">
+</head>
+<body>
+
+    <div class="registration-page-wrapper">
+        
+        <!-- Progress Indicator -->
+        <div class="reg-progress">
+            <div class="progress-step active" data-step="1">1</div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="2">2</div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="3">3</div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="4">4</div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="5">5</div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="6">6</div>
+            <div class="progress-line"></div>
+            <div class="progress-step" data-step="7">7</div>
+        </div>
+
+        <form id="registrationForm" class="reg-form" action="{{ url_for('auth.register') }}" method="POST">
+            
+            <!-- STEP 1: Choose Role -->
+            <div class="form-step active" id="step-1">
+                <h2 class="step-title">Join Mitti Se Mandi</h2>
+                <p class="step-subtitle">How do you want to use the platform?</p>
+                <div class="role-selection">
+                    <label class="role-card">
+                        <input type="radio" name="role" value="farmer" required>
+                        <div class="role-content">
+                            <h3>Farmer</h3>
+                            <p>I want to sell my crops directly to buyers.</p>
+                        </div>
+                    </label>
+                    <label class="role-card">
+                        <input type="radio" name="role" value="buyer" required>
+                        <div class="role-content">
+                            <h3>Buyer</h3>
+                            <p>I want to buy fresh produce directly from farmers.</p>
+                        </div>
+                    </label>
+                </div>
+                <div class="form-navigation">
+                    <button type="button" class="btn-next" onclick="nextStep(2)">Next Step</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Personal Details -->
+            <div class="form-step" id="step-2">
+                <h2 class="step-title">Personal Details</h2>
+                <p class="step-subtitle">Tell us a bit about yourself.</p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" name="fullName" placeholder="Ramesh Patel" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" name="phone" placeholder="+91 98765 43210" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Email Address</label>
+                        <input type="email" name="email" placeholder="ramesh@example.com" required>
+                    </div>
+                </div>
+                <div class="form-navigation">
+                    <button type="button" class="btn-prev" onclick="prevStep(1)">Back</button>
+                    <button type="button" class="btn-next" onclick="nextStep(3)">Next Step</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: Location -->
+            <div class="form-step" id="step-3">
+                <h2 class="step-title">Location</h2>
+                <p class="step-subtitle">Where are you based?</p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>State</label>
+                        <select name="state" required>
+                            <option value="">Select State</option>
+                            <option value="MH">Maharashtra</option>
+                            <option value="GJ">Gujarat</option>
+                            <option value="UP">Uttar Pradesh</option>
+                            <option value="PB">Punjab</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>District / City</label>
+                        <input type="text" name="city" placeholder="Nashik" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Full Address</label>
+                        <input type="text" name="address" placeholder="Village, Taluka, Pincode" required>
+                    </div>
+                </div>
+                <div class="form-navigation">
+                    <button type="button" class="btn-prev" onclick="prevStep(2)">Back</button>
+                    <button type="button" class="btn-next" onclick="nextStep(4)">Next Step</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: Role-Specific Details (Dynamic) -->
+            <div class="form-step" id="step-4">
+                <h2 class="step-title" id="step4-title">Farming Details</h2>
+                <p class="step-subtitle" id="step4-subtitle">Tell us what you grow.</p>
+                
+                <!-- Farmer Specific Fields -->
+                <div id="farmer-fields" class="form-grid">
+                    <div class="form-group">
+                        <label>Primary Crops</label>
+                        <input type="text" name="crops" placeholder="e.g., Wheat, Tomatoes, Onions">
+                    </div>
+                    <div class="form-group">
+                        <label>Land Size (in Acres)</label>
+                        <input type="number" name="landSize" placeholder="5">
+                    </div>
+                </div>
+
+                <!-- Buyer Specific Fields -->
+                <div id="buyer-fields" class="form-grid" style="display: none;">
+                    <div class="form-group">
+                        <label>Business Name</label>
+                        <input type="text" name="businessName" placeholder="Patel Traders">
+                    </div>
+                    <div class="form-group">
+                        <label>Interested In</label>
+                        <input type="text" name="interests" placeholder="e.g., Bulk Vegetables, Grains">
+                    </div>
+                </div>
+
+                <div class="form-navigation">
+                    <button type="button" class="btn-prev" onclick="prevStep(3)">Back</button>
+                    <button type="button" class="btn-next" onclick="nextStep(5)">Next Step</button>
+                </div>
+            </div>
+
+            <!-- STEP 5: Password -->
+            <div class="form-step" id="step-5">
+                <h2 class="step-title">Secure Your Account</h2>
+                <p class="step-subtitle">Create a strong password.</p>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Password</label>
+                        <input type="password" name="password" placeholder="••••••••" required>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Confirm Password</label>
+                        <input type="password" name="confirmPassword" placeholder="••••••••" required>
+                    </div>
+                </div>
+                <div class="form-navigation">
+                    <button type="button" class="btn-prev" onclick="prevStep(4)">Back</button>
+                    <button type="button" class="btn-next" onclick="nextStep(6)">Next Step</button>
+                </div>
+            </div>
+
+            <!-- STEP 6: Create Account (Review) -->
+            <div class="form-step" id="step-6">
+                <h2 class="step-title">Review & Create Account</h2>
+                <p class="step-subtitle">By clicking below, you agree to our Terms.</p>
+                <div class="review-box">
+                    <p><strong>Role:</strong> <span id="review-role">Farmer</span></p>
+                    <p><strong>Name:</strong> <span id="review-name">Ramesh Patel</span></p>
+                    <p><strong>Email:</strong> <span id="review-email">ramesh@example.com</span></p>
+                </div>
+                <div class="form-navigation">
+                    <button type="button" class="btn-prev" onclick="prevStep(5)">Back</button>
+                    <button type="submit" class="btn-submit">Create Account</button>
+                </div>
+            </div>
+
+            <!-- STEP 7: Login / Success -->
+            <div class="form-step" id="step-7">
+                <div class="success-message">
+                    <div class="success-icon">✓</div>
+                    <h2 class="step-title">Account Created!</h2>
+                    <p class="step-subtitle">Welcome to Mitti Se Mandi. You can now log in.</p>
+                    <button type="button" class="btn-login" onclick="alert('Redirecting to Dashboard...')">Go to Login</button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- Linking the separate JS file -->
+    <script src="{{ url_for('static', filename='js/register.js') }}"></script>
+</body>
+</html>
