@@ -1,6 +1,19 @@
-/* =========================================
-   LOGIN PAGE STYLES (LIGHT PURPLE THEME)
-   ========================================= */
+
+:root {
+    /* Colors — copied verbatim from style.css so all pages match exactly */
+    --bg-color: #FDFBF7;
+    --brand-dark-brown: #3E2723;
+    --brand-light-brown: #8D6E63;
+    --brand-green: #2E6B3E;
+    --brand-green-hover: #23522f;
+    --logo-bg: #E6EFE6;
+    --logo-border: #4A6B48;
+
+    /* Shared secondary tokens used across the site */
+    --border-color: #E0DCD3;
+    --input-border: #9B7B6B;
+    --hover-bg: #F5EBE0;
+}
 
 * {
     margin: 0;
@@ -10,7 +23,7 @@
 }
 
 body {
-    background-color: #F3F0FA; /* Very light purple background */
+    background-color: var(--bg-color);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -34,7 +47,7 @@ body {
 .login-header h1 {
     font-family: 'Georgia', serif;
     font-size: 26px;
-    color: #4A3B6B; /* Deep purple/brown text */
+    color: var(--brand-dark-brown);
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -45,22 +58,22 @@ body {
 .login-card {
     background-color: #FFFFFF;
     border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(107, 78, 155, 0.1); /* Soft purple shadow */
+    box-shadow: 0 10px 30px rgba(62, 39, 35, 0.1); /* Soft brand-brown shadow */
     padding: 50px 40px;
-    border: 1px solid #E0D4F5; /* Light purple border */
+    border: 1px solid var(--border-color);
 }
 
 .welcome-title {
     font-family: 'Georgia', serif;
     font-size: 24px;
-    color: #4A3B6B; /* Deep purple */
+    color: var(--brand-dark-brown);
     text-align: center;
     margin-bottom: 8px;
 }
 
 .welcome-subtitle {
     font-size: 15px;
-    color: #8C7BAE; /* Muted purple */
+    color: var(--brand-light-brown);
     text-align: center;
     margin-bottom: 32px;
 }
@@ -81,7 +94,7 @@ body {
 .form-group label {
     font-size: 14px;
     font-weight: 700;
-    color: #4A3B6B;
+    color: var(--brand-dark-brown);
 }
 
 .form-group input {
@@ -89,22 +102,22 @@ body {
     padding: 14px 16px;
     font-size: 15px;
     font-family: inherit;
-    color: #4A3B6B;
-    background-color: #FDFBFF; /* Very light purple/white background */
-    border: 1px solid #D1C4E9; /* Light purple border */
+    color: var(--brand-dark-brown);
+    background-color: var(--bg-color);
+    border: 1px solid var(--input-border);
     border-radius: 6px;
     outline: none;
     transition: all 0.2s ease;
 }
 
 .form-group input::placeholder {
-    color: #B0A3C9; /* Light purple placeholder */
+    color: #A89F91;
 }
 
 .form-group input:focus {
-    border-color: #6B4E9B; /* Deep purple on focus */
+    border-color: var(--brand-green);
     background-color: #FFFFFF;
-    box-shadow: 0 0 0 3px rgba(107, 78, 155, 0.15);
+    box-shadow: 0 0 0 3px rgba(46, 107, 62, 0.15);
 }
 
 /* --- FORGOT PASSWORD --- */
@@ -115,20 +128,20 @@ body {
 
 .forgot-password a {
     font-size: 14px;
-    color: #6B4E9B; /* Deep purple */
+    color: var(--brand-green);
     text-decoration: none;
     font-weight: 600;
     transition: color 0.2s ease;
 }
 
 .forgot-password a:hover {
-    color: #4A3B6B;
+    color: var(--brand-green-hover);
     text-decoration: underline;
 }
 
 /* --- LOGIN BUTTON --- */
 .login-btn {
-    background-color: #6B4E9B; /* Deep purple button */
+    background-color: var(--brand-green);
     color: #FFFFFF;
     border: none;
     padding: 16px;
@@ -143,7 +156,7 @@ body {
 }
 
 .login-btn:hover {
-    background-color: #523A78; /* Darker purple on hover */
+    background-color: var(--brand-green-hover);
 }
 
 /* --- REGISTER LINK --- */
@@ -151,25 +164,25 @@ body {
     text-align: center;
     margin-top: 32px;
     padding-top: 24px;
-    border-top: 1px solid #E0D4F5; /* Light purple divider */
+    border-top: 1px solid var(--border-color);
 }
 
 .register-link p {
     font-size: 15px;
-    color: #8C7BAE;
+    color: var(--brand-light-brown);
     margin-bottom: 6px;
 }
 
 .register-link a {
     font-size: 15px;
     font-weight: 700;
-    color: #6B4E9B;
+    color: var(--brand-green);
     text-decoration: none;
     transition: color 0.2s ease;
 }
 
 .register-link a:hover {
-    color: #4A3B6B;
+    color: var(--brand-green-hover);
     text-decoration: underline;
 }
 
