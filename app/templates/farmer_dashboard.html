@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mitti Se Mandi — Farmer Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/farmer_dashboard.css') }}">
+</head>
+<body>
+
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-logo" id="logoInit">M</div>
+            <div>
+                <div class="brand-name">Mitti Se Mandi</div>
+                <div class="brand-sub">Farmer Panel</div>
+            </div>
+        </div>
+
+        <ul class="nav-list" id="navList"></ul>
+
+        <button class="logout-btn" id="logoutBtn">Logout</button>
+    </aside>
+
+    <main>
+        <button class="menu-toggle" id="menuToggle">Menu</button>
+
+        <!-- DASHBOARD -->
+        <section class="view active" id="view-dashboard">
+            <div class="topbar">
+                <div>
+                    <div class="eyebrow">Farmer Dashboard</div>
+                    <h1 class="page-title" id="greeting">Welcome!</h1>
+                </div>
+                <div class="who">
+                    <div class="av" id="topAv">F</div>
+                    <div>
+                        <div class="name" id="topName">Farmer</div>
+                        <div class="role">Farmer</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-row">
+                <div class="hero">
+                    <div>
+                        <div class="hero-eyebrow">Today's Overview</div>
+                        <h2>Manage your crops and sell smarter.</h2>
+                        <p>Check market prices, use the 7-day forecast and manage your crop listings.</p>
+                    </div>
+                    <button class="btn btn-primary" id="openAddCrop">+ Add New Crop</button>
+                </div>
+
+                <div class="weather-card">
+                    <div class="weather-top">
+                        <div>
+                            <div class="weather-place" id="weatherPlace">Market area</div>
+                            <div class="weather-temp">—</div>
+                            <div class="weather-desc">Weather integration coming later</div>
+                        </div>
+                        <div class="weather-icon">⛅</div>
+                    </div>
+                    <div class="weather-range">
+                        <span>Forecast: <b>Planned</b></span>
+                    </div>
+                    <div class="weather-tip">Weather data will be connected after the core market workflow.</div>
+                </div>
+            </div>
+
+            <div class="stat-grid" id="statGrid"></div>
+
+            <div class="two-col">
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <div class="eyebrow">Your Crops</div>
+                            <h3>My Crop Listings</h3>
+                        </div>
+                        <button class="panel-link" data-nav="my-crops">View All</button>
+                    </div>
+                    <div id="dashCropList"></div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <div class="eyebrow">Market Intelligence</div>
+                            <h3>Forecast</h3>
+                        </div>
+                        <button class="panel-link" data-nav="market-prices">Open</button>
+                    </div>
+                    <div id="dashForecastSummary" class="empty">Select a market and commodity in Market Prices.</div>
+                </div>
+            </div>
+
+            <div class="ml-panel">
+                <div class="ml-left">
+                    <div class="eyebrow">Live ML Integration</div>
+                    <h3>7-Day Price Forecast</h3>
+                    <p>The trained LightGBM models now power the dashboard through the Flask forecast API.</p>
+                </div>
+                <div class="ml-icon">📈</div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <div class="eyebrow">Buyer Activity</div>
+                        <h3>Recent Buyer Requests</h3>
+                    </div>
+                    <button class="panel-link" data-nav="buyer-requests">View All</button>
+                </div>
+                <div class="empty">Buyer-request workflow will be connected in the marketplace phase.</div>
+            </div>
+        </section>
+
+        <!-- MY CROPS -->
+        <section class="view" id="view-my-crops">
+            <div class="topbar">
+                <div>
+                    <div class="eyebrow">My Crops</div>
+                    <h1 class="page-title">View Crops</h1>
+                </div>
+            </div>
+            <div class="toolbar">
+                <div class="search">
+                    <span>🔍</span>
+                    <input id="cropSearch" placeholder="Search your crops…">
+                </div>
+                <button class="btn btn-primary" id="openAddCrop2">+ Add New Crop</button>
+            </div>
+            <div class="grid-cards" id="cropGrid"></div>
+        </section>
+
+        <!-- MARKET PRICES -->
+        <section class="view" id="view-market-prices">
+            <div class="topbar">
+                <div>
+                    <div class="eyebrow">Market Intelligence</div>
+                    <h1 class="page-title">Market Prices & 7-Day Forecast</h1>
+                </div>
+            </div>
+
+            <div class="panel" style="margin-bottom:18px;">
+                <div class="toolbar">
+                    <div class="field" style="margin-bottom:0; width:100%; max-width:320px;">
+                        <label for="marketSelect">Market</label>
+                        <select id="marketSelect"></select>
+                    </div>
+
+                    <div class="field" style="margin-bottom:0; width:100%; max-width:320px;">
+                        <label for="commoditySelect">Commodity</label>
+                        <select id="commoditySelect" disabled></select>
+                    </div>
+
+                    <button class="btn btn-primary" id="loadForecastBtn" disabled>
+                        Get Forecast
+                    </button>
+                </div>
+                <div id="marketError" class="empty" style="padding:16px 0 0;"></div>
+            </div>
+
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Current Price</div>
+                    <div class="stat-value" id="currentPrice">—</div>
+                    <div class="stat-note" id="reportDate">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Day 7 Forecast</div>
+                    <div class="stat-value" id="day7Price">—</div>
+                    <div class="stat-note" id="day7Date">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">7-Day Change</div>
+                    <div class="stat-value" id="change7d">—</div>
+                    <div class="stat-note">Compared with current price</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Recommendation</div>
+                    <div class="stat-value" id="recommendation" style="font-size:1.15rem;">—</div>
+                    <div class="stat-note">Model decision layer</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <div class="eyebrow">Forecast Path</div>
+                        <h3>Next 7 Calendar Days</h3>
+                    </div>
+                </div>
+                <table class="tbl" id="forecastTable">
+                    <tr>
+                        <th>Day</th>
+                        <th>Date</th>
+                        <th>Predicted Price</th>
+                    </tr>
+                    <tr>
+                        <td colspan="3">No forecast loaded.</td>
+                    </tr>
+                </table>
+            </div>
+        </section>
+
+        <!-- BUYERS -->
+        <section class="view" id="view-buyers">
+            <div class="topbar">
+                <div>
+                    <div class="eyebrow">Buyers</div>
+                    <h1 class="page-title">Find Buyers</h1>
+                </div>
+            </div>
+            <div class="panel empty">Verified buyer matching will be connected in the marketplace phase.</div>
+        </section>
+
+        <!-- BUYER REQUESTS -->
+        <section class="view" id="view-buyer-requests">
+            <div class="topbar">
+                <div>
+                    <div class="eyebrow">Buyers</div>
+                    <h1 class="page-title">Buyer Requests</h1>
+                </div>
+            </div>
+            <div class="panel empty">Buyer requests will appear here after the matching module is connected.</div>
+        </section>
+
+        <!-- ORDERS -->
+        <section class="view" id="view-orders">
+            <div class="topbar">
+                <div>
+                    <div class="eyebrow">Orders</div>
+                    <h1 class="page-title">My Sales / Orders</h1>
+                </div>
+            </div>
+            <div class="panel empty">Orders will appear here after offers and transactions are implemented.</div>
+        </section>
+
+        <!-- PROFILE -->
+        <section class="view" id="view-profile">
+            <div class="topbar">
+                <div>
+                    <div class="eyebrow">Profile</div>
+                    <h1 class="page-title">View Profile</h1>
+                </div>
+            </div>
+            <div class="profile-box" id="profileView"></div>
+        </section>
+
+        <!-- EDIT PROFILE -->
+        <section class="view" id="view-edit-profile">
+            <div class="topbar">
+                <div>
+                    <div class="eyebrow">Profile</div>
+                    <h1 class="page-title">Edit Profile</h1>
+                </div>
+            </div>
+            <div class="profile-box" id="profileEdit"></div>
+        </section>
+    </main>
+</div>
+
+<!-- ADD CROP MODAL -->
+<div class="overlay" id="cropOverlay">
+    <div class="modal">
+        <h3>Add New Crop</h3>
+
+        <form action="{{ url_for('crops.add_crop') }}" method="POST">
+            <div class="field">
+                <label>Crop name</label>
+                <input type="text" name="crop_name" placeholder="e.g. Tomato" required>
+            </div>
+
+            <div class="field">
+                <label>Quantity (KG)</label>
+                <input type="number" name="quantity" min="1" placeholder="e.g. 500" required>
+            </div>
+
+            <div class="field">
+                <label>Grade</label>
+                <select name="grade">
+                    <option value="Grade A">Grade A</option>
+                    <option value="Grade B">Grade B</option>
+                    <option value="Grade C">Grade C</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Price (₹/KG)</label>
+                <input type="number" name="price" step="0.01" min="0.01" placeholder="e.g. 25" required>
+            </div>
+
+            <div class="field">
+                <label>Status</label>
+                <select name="status">
+                    <option value="Available">Available</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Sold">Sold</option>
+                </select>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" id="cancelCrop">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save crop</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    window.farmerData = {{ farmer|tojson }};
+    window.myCrops = {{ crops|tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/farmer_dashboard.js') }}"></script>
+</body>
+</html>
