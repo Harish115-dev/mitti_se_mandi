@@ -1,7 +1,14 @@
 from __future__ import annotations
 
 from functools import wraps
-from flask import Blueprint, redirect, render_template, session, url_for
+
+from flask import (
+    Blueprint,
+    redirect,
+    render_template,
+    session,
+    url_for,
+)
 
 from app.db.database import get_connection
 
@@ -18,11 +25,16 @@ def farmer_required(view):
 
     @wraps(view)
     def wrapped(*args, **kwargs):
+
         if "user_id" not in session:
-            return redirect(url_for("auth.login"))
+            return redirect(
+                url_for("auth.login")
+            )
 
         if session.get("user_role") != "farmer":
-            return redirect(url_for("auth.login"))
+            return redirect(
+                url_for("auth.login")
+            )
 
         return view(*args, **kwargs)
 
@@ -35,10 +47,12 @@ def farmer_dashboard():
     """Render the farmer dashboard with real DB-backed farmer data."""
 
     user_id = session["user_id"]
+
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
+
         cursor.execute(
             """
             SELECT
@@ -61,8 +75,13 @@ def farmer_dashboard():
         farmer = cursor.fetchone()
 
         if not farmer:
+
             session.clear()
-            return redirect(url_for("auth.login"))
+
+            return redirect(
+                url_for("auth.login")
+            )
+
 
         cursor.execute(
             """
@@ -71,7 +90,7 @@ def farmer_dashboard():
                 crop_name,
                 quantity,
                 grade,
-                price,
+                expected_price AS price,
                 status,
                 created_at
             FROM crops
@@ -83,16 +102,25 @@ def farmer_dashboard():
 
         crops = cursor.fetchall()
 
+    
+
         for crop in crops:
+
             if crop.get("created_at") is not None:
-                crop["created_at"] = crop["created_at"].strftime(
-                    "%Y-%m-%d"
+
+                crop["created_at"] = (
+                    crop["created_at"]
+                    .strftime("%Y-%m-%d")
                 )
 
         if farmer.get("created_at") is not None:
-            farmer["created_at"] = farmer["created_at"].strftime(
-                "%Y-%m-%d"
+
+            farmer["created_at"] = (
+                farmer["created_at"]
+                .strftime("%Y-%m-%d")
             )
+
+    
 
         return render_template(
             "farmer_dashboard.html",
@@ -101,11 +129,17 @@ def farmer_dashboard():
         )
 
     finally:
+
         cursor.close()
         conn.close()
 
 
 @dashboard_bp.route("/logout")
 def logout():
+    """Log the current user out."""
+
     session.clear()
-    return redirect(url_for("home"))
+
+    return redirect(
+        url_for("home")
+    )

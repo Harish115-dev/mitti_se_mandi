@@ -36,13 +36,13 @@ CREATE TABLE IF NOT EXISTS users (
 
     interests TEXT,
 
+    is_verified BOOLEAN NOT NULL DEFAULT FALSE,
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP
 );
-
-
 
 -- FARMER CROPS
 
@@ -58,8 +58,7 @@ CREATE TABLE IF NOT EXISTS crops (
 
     quantity DECIMAL(12,2) NOT NULL,
 
-    quantity_unit VARCHAR(30)
-        DEFAULT 'quintal',
+    quantity_unit VARCHAR(30) NOT NULL DEFAULT 'quintal',
 
     grade VARCHAR(100),
 
@@ -72,12 +71,11 @@ CREATE TABLE IF NOT EXISTS crops (
     market_name VARCHAR(200),
 
     status ENUM(
-        'draft',
         'available',
         'listed',
         'sold',
         'inactive'
-    ) DEFAULT 'available',
+    ) NOT NULL DEFAULT 'available',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -94,6 +92,7 @@ CREATE TABLE IF NOT EXISTS crops (
 
 -- LOTS
 
+
 CREATE TABLE IF NOT EXISTS lots (
     id INT AUTO_INCREMENT PRIMARY KEY,
 
@@ -107,8 +106,7 @@ CREATE TABLE IF NOT EXISTS lots (
 
     quantity DECIMAL(12,2) NOT NULL,
 
-    quantity_unit VARCHAR(30)
-        DEFAULT 'quintal',
+    quantity_unit VARCHAR(30) NOT NULL DEFAULT 'quintal',
 
     grade VARCHAR(100),
 
@@ -126,7 +124,7 @@ CREATE TABLE IF NOT EXISTS lots (
         'matched',
         'sold',
         'cancelled'
-    ) DEFAULT 'draft',
+    ) NOT NULL DEFAULT 'draft',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -157,8 +155,7 @@ CREATE TABLE IF NOT EXISTS buyer_requirements (
 
     max_quantity DECIMAL(12,2),
 
-    quantity_unit VARCHAR(30)
-        DEFAULT 'quintal',
+    quantity_unit VARCHAR(30) NOT NULL DEFAULT 'quintal',
 
     required_grade VARCHAR(100),
 
@@ -169,7 +166,7 @@ CREATE TABLE IF NOT EXISTS buyer_requirements (
     status ENUM(
         'active',
         'closed'
-    ) DEFAULT 'active',
+    ) NOT NULL DEFAULT 'active',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -205,7 +202,7 @@ CREATE TABLE IF NOT EXISTS listings (
         'paused',
         'sold',
         'cancelled'
-    ) DEFAULT 'active',
+    ) NOT NULL DEFAULT 'active',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -224,9 +221,7 @@ CREATE TABLE IF NOT EXISTS listings (
 );
 
 
-
 -- OFFERS
-
 
 CREATE TABLE IF NOT EXISTS offers (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -247,7 +242,7 @@ CREATE TABLE IF NOT EXISTS offers (
         'rejected',
         'countered',
         'cancelled'
-    ) DEFAULT 'pending',
+    ) NOT NULL DEFAULT 'pending',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -264,7 +259,6 @@ CREATE TABLE IF NOT EXISTS offers (
         REFERENCES users(id)
         ON DELETE CASCADE
 );
-
 
 
 -- TRANSACTIONS
@@ -291,7 +285,7 @@ CREATE TABLE IF NOT EXISTS transactions (
         'completed',
         'cancelled',
         'disputed'
-    ) DEFAULT 'pending',
+    ) NOT NULL DEFAULT 'pending',
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -333,7 +327,7 @@ CREATE TABLE IF NOT EXISTS payments (
         'paid',
         'failed',
         'refunded'
-    ) DEFAULT 'pending',
+    ) NOT NULL DEFAULT 'pending',
 
     paid_at DATETIME,
 
@@ -349,9 +343,7 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 
 
-
 -- DISPUTES
-
 
 CREATE TABLE IF NOT EXISTS disputes (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -369,7 +361,7 @@ CREATE TABLE IF NOT EXISTS disputes (
         'under_review',
         'resolved',
         'closed'
-    ) DEFAULT 'open',
+    ) NOT NULL DEFAULT 'open',
 
     resolution TEXT,
 
@@ -388,8 +380,8 @@ CREATE TABLE IF NOT EXISTS disputes (
         ON DELETE CASCADE
 );
 
-
 -- INDEXES
+
 
 CREATE INDEX idx_users_role
     ON users(role);

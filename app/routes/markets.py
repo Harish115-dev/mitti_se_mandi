@@ -13,17 +13,28 @@ market_bp = Blueprint(
 )
 
 
+# Only expose market/commodity combinations with
+# data available within the latest 30 days.
+RECENT_DAYS = 30
+
+
 @market_bp.get("/")
 def markets():
 
     try:
+
+        result = get_markets(
+            recent_days=RECENT_DAYS
+        )
+
         return jsonify(
             {
-                "markets": get_markets()
+                "markets": result
             }
         ), 200
 
     except Exception as exc:
+
         return jsonify(
             {
                 "error": "Failed to load markets",
@@ -38,7 +49,8 @@ def commodities(market_name):
     try:
 
         result = get_commodities_for_market(
-            market_name
+            market_name=market_name,
+            recent_days=RECENT_DAYS,
         )
 
         return jsonify(

@@ -1,297 +1,228 @@
+(function () {
+
+    /* =========================================
+       FARMER DASHBOARD
+       Flask + Jinja + MySQL version
+
+       Real data currently used:
+       - Farmer profile
+       - Farmer crops
+
+       Not connected yet:
+       - Market prices
+       - Buyer requests
+       - Buyers
+       - Orders
+       ========================================= */
 
 
-(function(){
+    /* ---------- DATA FROM FLASK ---------- */
 
     const fd = window.farmerData || {};
-    const dbCrops = window.myCrops || []; 
+    const dbCrops = window.myCrops || [];
+
+
+    /* ---------- APPLICATION STATE ---------- */
 
     const state = {
-        farmer:{
-            name:    fd.name    || "Farmer",
+
+        farmer: {
+            name: fd.name || "Farmer",
             village: fd.village || "Location",
-            phone:   fd.phone   || "",
-            crops:   fd.crops   || "Not set",
-            since:   fd.since   || "2024",
-            land:    fd.land    || "Not set"
+            phone: fd.phone || "",
+            crops: fd.crops || "Not set",
+            since: fd.since || "2024",
+            land: fd.land || "Not set"
         },
 
-        // Use the database crops here, not hardcoded data
-        crops: dbCrops.map(c => ({
-            id: c.id,
-            name: c.crop_name,
-            qty: c.quantity,
-            unit: "KG",
-            grade: c.grade,
-            price: parseFloat(c.price),
-            status: c.status
-        })),
 
-        // The rest remains hardcoded for now
-        // We will replace these later with Flask APIs.
-        prices:[
-            {
-                crop:"Tomato",
-                market:"Junagadh Mandi",
-                price:25,
-                unit:"KG",
-                trend:"up",
-                change:"+4.2%"
-            },
-            {
-                crop:"Wheat",
-                market:"Rajkot Mandi",
-                price:2450,
-                unit:"Quintal",
-                trend:"up",
-                change:"+2.1%"
-            },
-            {
-                crop:"Onion",
-                market:"Junagadh Mandi",
-                price:21,
-                unit:"KG",
-                trend:"down",
-                change:"-1.4%"
-            },
-            {
-                crop:"Cotton",
-                market:"Amreli Mandi",
-                price:7200,
-                unit:"Quintal",
-                trend:"up",
-                change:"+3.5%"
-            },
-            {
-                crop:"Cumin",
-                market:"Unjha Mandi",
-                price:28500,
-                unit:"Quintal",
-                trend:"down",
-                change:"-1.1%"
-            },
-            {
-                crop:"Castor",
-                market:"Gondal Mandi",
-                price:6350,
-                unit:"Quintal",
-                trend:"up",
-                change:"+0.9%"
-            }
-        ],
+        /*
+         * Real crop data from Flask / MySQL.
+         */
+        crops: dbCrops.map(function (c) {
 
-        requests:[
-            {
-                id:1,
-                buyer:"ABC Foods",
-                crop:"Tomato",
-                qty:"100 KG",
-                when:"2 hours ago",
-                price:"₹25/KG",
-                status:"pending"
-            },
-            {
-                id:2,
-                buyer:"Gujarat AgroMart",
-                crop:"Wheat",
-                qty:"5 Quintal",
-                when:"Yesterday",
-                price:"₹2,450/Q",
-                status:"pending"
-            },
-            {
-                id:3,
-                buyer:"Saurashtra Exports",
-                crop:"Onion",
-                qty:"150 KG",
-                when:"3 days ago",
-                price:"₹21/KG",
-                status:"accepted"
-            }
-        ],
+            return {
+                id: c.id,
 
-        buyers:[
-            {
-                name:"ABC Foods",
-                loc:"Junagadh",
-                deals:"Tomato, Onion",
-                rating:"4.6"
-            },
-            {
-                name:"Gujarat AgroMart",
-                loc:"Rajkot",
-                deals:"Wheat, Cotton",
-                rating:"4.3"
-            },
-            {
-                name:"Saurashtra Exports",
-                loc:"Amreli",
-                deals:"Onion, Cumin",
-                rating:"4.8"
-            },
-            {
-                name:"Kathiyawadi Mandi Traders",
-                loc:"Gondal",
-                deals:"Castor, Wheat",
-                rating:"4.1"
-            }
-        ],
+                name: c.crop_name,
 
-        orders:[
-            {
-                id:"ORD-2041",
-                crop:"Onion",
-                buyer:"Saurashtra Exports",
-                qty:"150 KG",
-                amount:"₹3,150",
-                status:"Delivered",
-                date:"10 Sep 2026"
-            },
-            {
-                id:"ORD-2038",
-                crop:"Wheat",
-                buyer:"Gujarat AgroMart",
-                qty:"5 Quintal",
-                amount:"₹12,250",
-                status:"In transit",
-                date:"08 Sep 2026"
-            },
-            {
-                id:"ORD-2030",
-                crop:"Tomato",
-                buyer:"ABC Foods",
-                qty:"80 KG",
-                amount:"₹2,000",
-                status:"Delivered",
-                date:"29 Aug 2026"
-            }
-        ],
+                qty: c.quantity,
 
-        priceFilter:"All"
+                unit: c.quantity_unit || "quintal",
+
+                grade: c.grade || "Not graded",
+
+                price: Number(
+                    c.price || 0
+                ),
+
+                status: (
+                    c.status || "available"
+                ).toLowerCase()
+            };
+
+        }),
+
+
+        /*
+         * These modules are intentionally empty.
+         *
+         * We will connect them to real Flask APIs
+         * when their backend modules are implemented.
+         */
+        prices: [],
+
+        requests: [],
+
+        buyers: [],
+
+        orders: [],
+
+
+        priceFilter: "All"
+
     };
 
 
-    /* ---------- NAVIGATION CONFIG ---------- */
+    /* =========================================
+       NAVIGATION CONFIGURATION
+       ========================================= */
 
     const nav = {
 
-        dashboard:{
-            label:"Dashboard",
-            view:"dashboard"
+        dashboard: {
+            label: "Dashboard",
+            view: "dashboard"
         },
 
-        "my-crops":{
-            label:"My Crops",
-            view:"my-crops"
+        "my-crops": {
+            label: "My Crops",
+            view: "my-crops"
         },
 
-        "market-prices":{
-            label:"Market Prices",
-            view:"market-prices"
+        "market-prices": {
+            label: "Market Prices",
+            view: "market-prices"
         },
 
-        buyers:{
-            label:"Buyers",
-            view:"buyers"
+        buyers: {
+            label: "Buyers",
+            view: "buyers"
         },
 
-        orders:{
-            label:"Orders",
-            view:"orders"
+        orders: {
+            label: "Orders",
+            view: "orders"
         },
 
-        profile:{
-            label:"Profile",
-            view:"profile"
+        profile: {
+            label: "Profile",
+            view: "profile"
         }
 
     };
 
 
     let activeGroup = "dashboard";
+
     let activeView = "dashboard";
 
 
     const viewToGroup = {
 
-        "dashboard":"dashboard",
+        dashboard: "dashboard",
 
-        "my-crops":"my-crops",
+        "my-crops": "my-crops",
 
-        "market-prices":"market-prices",
+        "market-prices": "market-prices",
 
-        "buyers":"buyers",
+        buyers: "buyers",
 
-        "buyer-requests":"buyers",
+        "buyer-requests": "buyers",
 
-        "orders":"orders",
+        orders: "orders",
 
-        "profile":"profile",
+        profile: "profile",
 
-        "edit-profile":"profile"
+        "edit-profile": "profile"
 
     };
 
 
-    /* ---------- SIDEBAR BUILD ---------- */
+    /* =========================================
+       SIDEBAR
+       ========================================= */
 
     const navList =
-        document.getElementById('navList');
-
-
-    Object.keys(nav).forEach(key => {
-
-        const g = nav[key];
-
-        const li =
-            document.createElement('li');
-
-        const btn =
-            document.createElement('button');
-
-        btn.className =
-            'nav-btn'
-            + (
-                key === activeGroup
-                    ? ' active'
-                    : ''
-            );
-
-        btn.textContent =
-            g.label;
-
-
-        btn.addEventListener(
-            'click',
-            () => {
-
-                activeGroup = key;
-
-                goTo(g.view);
-
-                renderNav();
-
-            }
+        document.getElementById(
+            "navList"
         );
 
 
-        li.appendChild(btn);
+    if (navList) {
 
-        navList.appendChild(li);
+        Object.keys(nav).forEach(function (key) {
 
-    });
+            const group = nav[key];
 
 
-    function renderNav(){
+            const li =
+                document.createElement("li");
+
+
+            const button =
+                document.createElement("button");
+
+
+            button.className =
+                "nav-btn"
+                +
+                (
+                    key === activeGroup
+                        ? " active"
+                        : ""
+                );
+
+
+            button.textContent =
+                group.label;
+
+
+            button.addEventListener(
+                "click",
+                function () {
+
+                    activeGroup = key;
+
+                    goTo(group.view);
+
+                    renderNav();
+
+                }
+            );
+
+
+            li.appendChild(button);
+
+            navList.appendChild(li);
+
+        });
+
+    }
+
+
+    function renderNav() {
 
         document
-            .querySelectorAll('.nav-btn')
-            .forEach((b, i) => {
+            .querySelectorAll(".nav-btn")
+            .forEach(function (button, index) {
 
                 const key =
-                    Object.keys(nav)[i];
+                    Object.keys(nav)[index];
 
-                b.classList.toggle(
-                    'active',
+
+                button.classList.toggle(
+                    "active",
                     key === activeGroup
                 );
 
@@ -300,33 +231,40 @@
     }
 
 
-    function goTo(id){
+    function goTo(id) {
 
         activeView = id;
 
+
         document
-            .querySelectorAll('.view')
-            .forEach(v =>
-                v.classList.remove('active')
-            );
+            .querySelectorAll(".view")
+            .forEach(function (view) {
+
+                view.classList.remove(
+                    "active"
+                );
+
+            });
 
 
-        const viewEl =
+        const viewElement =
             document.getElementById(
-                'view-' + id
+                "view-" + id
             );
 
 
-        if(viewEl){
+        if (viewElement) {
 
-            viewEl.classList.add('active');
+            viewElement.classList.add(
+                "active"
+            );
 
         }
 
 
         window.scrollTo({
-            top:0,
-            behavior:'smooth'
+            top: 0,
+            behavior: "smooth"
         });
 
 
@@ -335,25 +273,30 @@
     }
 
 
-    /* ---------- DATA-NAV BINDING ---------- */
+    /* =========================================
+       DATA-NAV LINKS
+       ========================================= */
 
     document
-        .querySelectorAll('[data-nav]')
-        .forEach(el => {
+        .querySelectorAll("[data-nav]")
+        .forEach(function (element) {
 
-            el.addEventListener(
-                'click',
-                () => {
+            element.addEventListener(
+                "click",
+                function () {
 
-                    const t =
-                        el.getAttribute(
-                            'data-nav'
+                    const target =
+                        element.getAttribute(
+                            "data-nav"
                         );
 
-                    activeGroup =
-                        viewToGroup[t] || t;
 
-                    goTo(t);
+                    activeGroup =
+                        viewToGroup[target]
+                        || target;
+
+
+                    goTo(target);
 
                 }
             );
@@ -361,76 +304,195 @@
         });
 
 
-    /* ---------- TOAST ---------- */
+    /* =========================================
+       TOAST
+       ========================================= */
 
-    function toast(msg){
+    function toast(message) {
 
-        const t =
-            document.getElementById('toast');
+        const toastElement =
+            document.getElementById(
+                "toast"
+            );
 
-        t.textContent =
-            msg;
 
-        t.classList.add('show');
+        if (!toastElement) {
+            return;
+        }
 
-        clearTimeout(t._tm);
 
-        t._tm =
+        toastElement.textContent =
+            message;
+
+
+        toastElement.classList.add(
+            "show"
+        );
+
+
+        clearTimeout(
+            toastElement._tm
+        );
+
+
+        toastElement._tm =
             setTimeout(
-                () =>
-                    t.classList.remove('show'),
+                function () {
+
+                    toastElement.classList.remove(
+                        "show"
+                    );
+
+                },
                 2200
             );
 
     }
 
 
-    function unitLabel(u){
+    /* =========================================
+       UNIT LABEL
+       ========================================= */
 
-        return u === 'KG'
-            ? 'KG'
-            : u;
+    function unitLabel(unit) {
+
+        if (!unit) {
+            return "";
+        }
+
+
+        return String(unit);
 
     }
 
 
-    /* ---------- DASHBOARD ---------- */
+    /* =========================================
+       STATUS CLASS
+       ========================================= */
 
-    function renderDashboard(){
+    function getStatusClass(status) {
 
-        const f =
+        const normalized =
+            String(
+                status || ""
+            ).toLowerCase();
+
+
+        if (
+            normalized === "available"
+            ||
+            normalized === "listed"
+            ||
+            normalized === "accepted"
+        ) {
+
+            return "pill-avail";
+
+        }
+
+
+        if (
+            normalized === "pending"
+            ||
+            normalized === "draft"
+        ) {
+
+            return "pill-pending";
+
+        }
+
+
+        return "pill-sold";
+
+    }
+
+
+    /* =========================================
+       DASHBOARD
+       ========================================= */
+
+    function renderDashboard() {
+
+        const farmer =
             state.farmer;
 
 
+        const nameParts =
+            farmer.name
+                .trim()
+                .split(/\s+/);
+
+
         const initials =
-            f.name
-                .split(' ')
-                .map(w => w[0])
-                .slice(0,2)
-                .join('');
+            nameParts
+                .map(function (word) {
+                    return word.charAt(0);
+                })
+                .slice(0, 2)
+                .join("");
 
 
-        document.getElementById('topAv')
-            .textContent =
-                initials[0] || 'F';
+        const topAvatar =
+            document.getElementById(
+                "topAv"
+            );
 
 
-        document.getElementById('topName')
-            .textContent =
-                f.name;
+        if (topAvatar) {
+
+            topAvatar.textContent =
+                initials || "F";
+
+        }
 
 
-        document.getElementById('logoInit')
-            .textContent =
+        const topName =
+            document.getElementById(
+                "topName"
+            );
+
+
+        if (topName) {
+
+            topName.textContent =
+                farmer.name;
+
+        }
+
+
+        const logoInitial =
+            document.getElementById(
+                "logoInit"
+            );
+
+
+        if (logoInitial) {
+
+            logoInitial.textContent =
                 "M";
 
+        }
 
-        document.getElementById('greeting')
-            .textContent =
+
+        const greeting =
+            document.getElementById(
+                "greeting"
+            );
+
+
+        if (greeting) {
+
+            greeting.textContent =
                 `Good Morning, ${
-                    f.name.split(' ')[0]
+                    nameParts[0] || "Farmer"
                 }!`;
 
+        }
+
+
+        /* -------------------------------------
+           REAL CROP STATISTICS
+           ------------------------------------- */
 
         const totalCrops =
             state.crops.length;
@@ -438,233 +500,340 @@
 
         const activeListings =
             state.crops.filter(
-                c => c.status === 'Available'
+                function (crop) {
+
+                    return (
+                        crop.status === "available"
+                        ||
+                        crop.status === "listed"
+                    );
+
+                }
             ).length;
 
 
-        // Orders and requests are hardcoded
-        const pendingOrders =
-            state.orders.filter(
-                o => o.status === 'In transit'
-            ).length
-            +
-            state.requests.filter(
-                r => r.status === 'pending'
-            ).length;
+        /*
+         * Marketplace module is not implemented yet.
+         * Never display fake order numbers.
+         */
+        const pendingOrders = 0;
 
 
-        const totalSales =
-            state.orders.reduce(
-                (s, o) =>
-                    s +
-                    Number(
-                        o.amount.replace(
-                            /[₹,]/g,
-                            ''
-                        )
-                    ),
-                0
+        /*
+         * Transaction module is not implemented yet.
+         * Never display fake sales.
+         */
+        const totalSales = 0;
+
+
+        const statGrid =
+            document.getElementById(
+                "statGrid"
             );
 
 
-        document.getElementById(
-            'statGrid'
-        ).innerHTML = `
+        if (statGrid) {
 
-            <div class="stat-card">
-                <div class="stat-label">
-                    Total Crops
-                </div>
+            statGrid.innerHTML = `
 
-                <div class="stat-value">
-                    ${totalCrops}
-                </div>
+                <div class="stat-card">
 
-                <div class="stat-note">
-                    Currently listed
-                </div>
-            </div>
-
-
-            <div class="stat-card">
-                <div class="stat-label">
-                    Active Listings
-                </div>
-
-                <div class="stat-value">
-                    ${activeListings}
-                </div>
-
-                <div class="stat-note">
-                    Available for sale
-                </div>
-            </div>
-
-
-            <div class="stat-card">
-                <div class="stat-label">
-                    Pending Orders
-                </div>
-
-                <div class="stat-value">
-                    ${pendingOrders}
-                </div>
-
-                <div class="stat-note">
-                    Need your attention
-                </div>
-            </div>
-
-
-            <div class="stat-card">
-                <div class="stat-label">
-                    Total Sales
-                </div>
-
-                <div class="stat-value">
-                    ₹${totalSales.toLocaleString('en-IN')}
-                </div>
-
-                <div class="stat-note">
-                    This month
-                </div>
-            </div>
-
-        `;
-
-
-        document.getElementById(
-            'dashCropList'
-        ).innerHTML =
-
-            state.crops
-                .slice(0,3)
-                .map(c => `
-
-                    <div class="crop-row">
-
-                        <div>
-
-                            <div class="crop-name">
-                                ${c.name}
-                            </div>
-
-                            <div class="crop-meta">
-                                ${c.qty}
-                                ${unitLabel(c.unit)}
-                                ·
-                                ${c.grade}
-                            </div>
-
-                        </div>
-
-
-                        <div
-                            style="text-align:right;"
-                        >
-
-                            <div class="crop-price">
-                                ₹${c.price}/${
-                                    c.unit === 'KG'
-                                        ? 'KG'
-                                        : 'Q'
-                                }
-                            </div>
-
-                            <span
-                                class="
-                                    pill
-                                    ${
-                                        c.status === 'Available'
-                                            ? 'pill-avail'
-                                            :
-                                        c.status === 'Pending'
-                                            ? 'pill-pending'
-                                            :
-                                            'pill-sold'
-                                    }
-                                "
-                            >
-                                ${c.status}
-                            </span>
-
-                        </div>
-
+                    <div class="stat-label">
+                        Total Crops
                     </div>
 
-                `)
-                .join('')
-
-            ||
-
-            `<div class="empty">
-                No crops listed yet.
-            </div>`;
-
-
-        document.getElementById(
-            'dashPriceList'
-        ).innerHTML =
-
-            state.prices
-                .slice(0,4)
-                .map(p => `
-
-                    <div class="price-row">
-
-                        <div class="price-crop">
-                            ${p.crop}
-                        </div>
-
-                        <div class="price-right">
-
-                            <div class="price-val">
-                                ₹${p.price.toLocaleString('en-IN')}/${
-                                    p.unit === 'KG'
-                                        ? 'KG'
-                                        : 'Q'
-                                }
-                            </div>
-
-                            <div
-                                class="${
-                                    p.trend === 'up'
-                                        ? 'change-up'
-                                        : 'change-down'
-                                }"
-                            >
-                                ${
-                                    p.trend === 'up'
-                                        ? '▲'
-                                        : '▼'
-                                }
-                                ${p.change}
-                            </div>
-
-                        </div>
-
+                    <div class="stat-value">
+                        ${totalCrops}
                     </div>
 
-                `)
-                .join('');
+                    <div class="stat-note">
+                        Currently listed
+                    </div>
+
+                </div>
 
 
-        document.getElementById(
-            'dashRequests'
-        ).innerHTML =
-            renderReqList(
-                state.requests.slice(0,3)
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Active Listings
+                    </div>
+
+                    <div class="stat-value">
+                        ${activeListings}
+                    </div>
+
+                    <div class="stat-note">
+                        Available for sale
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Pending Orders
+                    </div>
+
+                    <div class="stat-value">
+                        ${pendingOrders}
+                    </div>
+
+                    <div class="stat-note">
+                        Marketplace module pending
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card">
+
+                    <div class="stat-label">
+                        Total Sales
+                    </div>
+
+                    <div class="stat-value">
+                        ₹${totalSales.toLocaleString(
+                            "en-IN"
+                        )}
+                    </div>
+
+                    <div class="stat-note">
+                        Transaction module pending
+                    </div>
+
+                </div>
+
+            `;
+
+        }
+
+
+        /* -------------------------------------
+           FARMER CROPS
+           ------------------------------------- */
+
+        const dashCropList =
+            document.getElementById(
+                "dashCropList"
             );
 
 
-        bindReqButtons();
+        if (dashCropList) {
+
+            if (!state.crops.length) {
+
+                dashCropList.innerHTML = `
+                    <div class="empty">
+                        No crops listed yet.
+                    </div>
+                `;
+
+            } else {
+
+                dashCropList.innerHTML =
+                    state.crops
+                        .slice(0, 3)
+                        .map(function (crop) {
+
+                            return `
+
+                                <div class="crop-row">
+
+                                    <div>
+
+                                        <div class="crop-name">
+                                            ${crop.name}
+                                        </div>
+
+                                        <div class="crop-meta">
+
+                                            ${
+                                                crop.qty
+                                            }
+
+                                            ${
+                                                unitLabel(
+                                                    crop.unit
+                                                )
+                                            }
+
+                                            ·
+
+                                            ${
+                                                crop.grade
+                                            }
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div
+                                        style="
+                                            text-align:right;
+                                        "
+                                    >
+
+                                        <div class="crop-price">
+
+                                            ${
+                                                crop.price > 0
+                                                    ? "₹" +
+                                                      crop.price.toLocaleString(
+                                                          "en-IN"
+                                                      )
+                                                    : "—"
+                                            }
+
+                                            ${
+                                                crop.price > 0
+                                                    ? "/" +
+                                                      unitLabel(
+                                                          crop.unit
+                                                      )
+                                                    : ""
+                                            }
+
+                                        </div>
+
+
+                                        <span
+                                            class="
+                                                pill
+                                                ${getStatusClass(
+                                                    crop.status
+                                                )}
+                                            "
+                                        >
+                                            ${crop.status}
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+                            `;
+
+                        })
+                        .join("");
+
+            }
+
+        }
+
+
+        /* -------------------------------------
+           MARKET PRICE PREVIEW
+           ------------------------------------- */
+
+        const dashPriceList =
+            document.getElementById(
+                "dashPriceList"
+            );
+
+
+        if (dashPriceList) {
+
+            if (!state.prices.length) {
+
+                dashPriceList.innerHTML = `
+                    <div class="empty">
+                        Market price data will appear here
+                        after the market API is connected.
+                    </div>
+                `;
+
+            } else {
+
+                dashPriceList.innerHTML =
+                    state.prices
+                        .slice(0, 4)
+                        .map(function (price) {
+
+                            return `
+
+                                <div class="price-row">
+
+                                    <div class="price-crop">
+                                        ${price.crop}
+                                    </div>
+
+                                    <div class="price-right">
+
+                                        <div class="price-val">
+                                            ₹${Number(
+                                                price.price
+                                            ).toLocaleString(
+                                                "en-IN"
+                                            )}/${price.unit}
+                                        </div>
+
+                                        <div
+                                            class="${
+                                                price.trend === "up"
+                                                    ? "change-up"
+                                                    : "change-down"
+                                            }"
+                                        >
+
+                                            ${
+                                                price.trend === "up"
+                                                    ? "▲"
+                                                    : "▼"
+                                            }
+
+                                            ${price.change}
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            `;
+
+                        })
+                        .join("");
+
+            }
+
+        }
+
+
+        /* -------------------------------------
+           BUYER REQUESTS
+           ------------------------------------- */
+
+        const dashRequests =
+            document.getElementById(
+                "dashRequests"
+            );
+
+
+        if (dashRequests) {
+
+            dashRequests.innerHTML =
+                renderReqList(
+                    state.requests.slice(0, 3)
+                );
+
+
+            bindReqButtons();
+
+        }
 
     }
 
 
-    function renderReqList(list){
+    /* =========================================
+       REQUEST LIST
+       ========================================= */
 
-        if (!list.length){
+    function renderReqList(list) {
+
+        if (!list.length) {
 
             return `
                 <div class="empty">
@@ -675,85 +844,88 @@
         }
 
 
-        return list.map(r => {
+        return list
+            .map(function (request) {
 
-            const initials =
-                r.buyer
-                    .split(' ')
-                    .map(w => w[0])
-                    .slice(0,2)
-                    .join('');
-
-
-            return `
-
-                <div class="req-row">
-
-                    <div
-                        style="
-                            display:flex;
-                            align-items:center;
-                            gap:12px;
-                        "
-                    >
-
-                        <div class="req-av">
-                            ${initials}
-                        </div>
-
-                        <div>
-
-                            <div class="req-name">
-                                ${r.buyer}
-                            </div>
-
-                            <div class="req-meta">
-                                ${r.crop}
-                                ·
-                                ${r.qty}
-                                ·
-                                ${r.when}
-                            </div>
-
-                        </div>
-
-                    </div>
+                const initials =
+                    request.buyer
+                        .split(" ")
+                        .map(function (word) {
+                            return word[0];
+                        })
+                        .slice(0, 2)
+                        .join("");
 
 
-                    <div
-                        style="
-                            display:flex;
-                            gap:8px;
-                            align-items:center;
-                        "
-                    >
+                return `
 
-                        <span
+                    <div class="req-row">
+
+                        <div
                             style="
-                                font-weight:700;
-                                font-size:0.9rem;
-                                margin-right:4px;
+                                display:flex;
+                                align-items:center;
+                                gap:12px;
                             "
                         >
-                            ${r.price}
-                        </span>
+
+                            <div class="req-av">
+                                ${initials}
+                            </div>
+
+                            <div>
+
+                                <div class="req-name">
+                                    ${request.buyer}
+                                </div>
+
+                                <div class="req-meta">
+                                    ${request.crop}
+                                    ·
+                                    ${request.qty}
+                                    ·
+                                    ${request.when}
+                                </div>
+
+                            </div>
+
+                        </div>
 
 
-                        ${
-                            r.status === 'pending'
+                        <div
+                            style="
+                                display:flex;
+                                gap:8px;
+                                align-items:center;
+                            "
+                        >
+
+                            <span
+                                style="
+                                    font-weight:700;
+                                    font-size:0.9rem;
+                                    margin-right:4px;
+                                "
+                            >
+                                ${request.price}
+                            </span>
+
+
+                            ${
+                                request.status === "pending"
 
                                 ? `
 
                                     <button
                                         class="btn btn-primary btn-sm"
-                                        data-acc="${r.id}"
+                                        data-acc="${request.id}"
                                     >
                                         Accept
                                     </button>
 
                                     <button
                                         class="btn btn-outline btn-sm"
-                                        data-dec="${r.id}"
+                                        data-dec="${request.id}"
                                     >
                                         Decline
                                     </button>
@@ -767,135 +939,182 @@
                                     <span
                                         class="
                                             pill
-                                            ${
-                                                r.status === 'accepted'
-                                                    ? 'pill-avail'
-                                                    : 'pill-sold'
-                                            }
+                                            ${getStatusClass(
+                                                request.status
+                                            )}
                                         "
                                     >
-                                        ${r.status}
+                                        ${request.status}
                                     </span>
 
                                 `
-                        }
+                            }
+
+                        </div>
 
                     </div>
 
-                </div>
+                `;
 
-            `;
-
-        }).join('');
-
-    }
-
-
-    function bindReqButtons(){
-
-        document
-            .querySelectorAll('[data-acc]')
-            .forEach(b =>
-
-                b.addEventListener(
-                    'click',
-                    () => {
-
-                        const r =
-                            state.requests.find(
-                                x =>
-                                    x.id ==
-                                    b.getAttribute(
-                                        'data-acc'
-                                    )
-                            );
-
-
-                        if(r)
-                            r.status =
-                                'accepted';
-
-
-                        toast(
-                            `Accepted request from ${r.buyer}`
-                        );
-
-
-                        renderAll();
-
-                    }
-                )
-
-            );
-
-
-        document
-            .querySelectorAll('[data-dec]')
-            .forEach(b =>
-
-                b.addEventListener(
-                    'click',
-                    () => {
-
-                        const r =
-                            state.requests.find(
-                                x =>
-                                    x.id ==
-                                    b.getAttribute(
-                                        'data-dec'
-                                    )
-                            );
-
-
-                        if(r)
-                            r.status =
-                                'declined';
-
-
-                        toast(
-                            `Declined request from ${r.buyer}`
-                        );
-
-
-                        renderAll();
-
-                    }
-                )
-
-            );
+            })
+            .join("");
 
     }
 
 
-    /* ---------- CROPS ---------- */
+    /* =========================================
+       REQUEST BUTTONS
+       ========================================= */
+
+    function bindReqButtons() {
+
+        document
+            .querySelectorAll(
+                "[data-acc]"
+            )
+            .forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        const request =
+                            state.requests.find(
+                                function (item) {
+
+                                    return (
+                                        item.id ==
+                                        button.getAttribute(
+                                            "data-acc"
+                                        )
+                                    );
+
+                                }
+                            );
+
+
+                        if (request) {
+
+                            request.status =
+                                "accepted";
+
+
+                            toast(
+                                `Accepted request from ${request.buyer}`
+                            );
+
+
+                            renderAll();
+
+                        }
+
+                    }
+                );
+
+            });
+
+
+        document
+            .querySelectorAll(
+                "[data-dec]"
+            )
+            .forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        const request =
+                            state.requests.find(
+                                function (item) {
+
+                                    return (
+                                        item.id ==
+                                        button.getAttribute(
+                                            "data-dec"
+                                        )
+                                    );
+
+                                }
+                            );
+
+
+                        if (request) {
+
+                            request.status =
+                                "declined";
+
+
+                            toast(
+                                `Declined request from ${request.buyer}`
+                            );
+
+
+                            renderAll();
+
+                        }
+
+                    }
+                );
+
+            });
+
+    }
+
+
+    /* =========================================
+       CROPS
+       ========================================= */
 
     function renderCrops(
         filter = ""
-    ){
+    ) {
+
+        const normalizedFilter =
+            filter
+                .trim()
+                .toLowerCase();
+
 
         const list =
             state.crops.filter(
-                c =>
-                    c.name
+                function (crop) {
+
+                    return crop.name
                         .toLowerCase()
                         .includes(
-                            filter.toLowerCase()
-                        )
+                            normalizedFilter
+                        );
+
+                }
             );
 
 
         const grid =
             document.getElementById(
-                'cropGrid'
+                "cropGrid"
             );
 
 
-        if (!list.length){
+        if (!grid) {
+            return;
+        }
+
+
+        if (!list.length) {
 
             grid.innerHTML = `
+
                 <div class="empty">
-                    No crops match "${filter}".
+
+                    ${
+                        normalizedFilter
+                            ? `No crops match "${filter}".`
+                            : "No crops listed yet."
+                    }
+
                 </div>
+
             `;
 
             return;
@@ -904,417 +1123,1409 @@
 
 
         grid.innerHTML =
-            list.map(c => `
+            list
+                .map(function (crop) {
 
-                <div class="crop-tile">
+                    return `
 
-                    <div class="ct-top">
+                        <div class="crop-tile">
 
-                        <span
-                            class="crop-badge"
-                        >
-                            ${c.name
-                                .charAt(0)
-                                .toUpperCase()}
-                        </span>
+                            <div class="ct-top">
 
-                        <span
-                            class="
-                                pill
-                                ${
-                                    c.status === 'Available'
-                                        ? 'pill-avail'
-                                        :
-                                    c.status === 'Pending'
-                                        ? 'pill-pending'
-                                        :
-                                        'pill-sold'
-                                }
-                            "
-                        >
-                            ${c.status}
-                        </span>
+                                <span class="crop-badge">
 
-                    </div>
+                                    ${
+                                        crop.name
+                                            .charAt(0)
+                                            .toUpperCase()
+                                    }
+
+                                </span>
 
 
-                    <div class="ct-name">
-                        ${c.name}
-                    </div>
+                                <span
+                                    class="
+                                        pill
+                                        ${getStatusClass(
+                                            crop.status
+                                        )}
+                                    "
+                                >
+                                    ${crop.status}
+                                </span>
+
+                            </div>
 
 
-                    <div class="ct-row">
-                        <span>Quantity</span>
-                        <span>
-                            ${c.qty}
-                            ${unitLabel(c.unit)}
-                        </span>
-                    </div>
+                            <div class="ct-name">
+                                ${crop.name}
+                            </div>
 
 
-                    <div class="ct-row">
-                        <span>Grade</span>
-                        <span>
-                            ${c.grade}
-                        </span>
-                    </div>
+                            <div class="ct-row">
+
+                                <span>
+                                    Quantity
+                                </span>
+
+                                <span>
+                                    ${crop.qty}
+                                    ${unitLabel(crop.unit)}
+                                </span>
+
+                            </div>
 
 
-                    <div class="ct-row">
-                        <span>Price</span>
-                        <span>
-                            ₹${c.price}/${
-                                c.unit === 'KG'
-                                    ? 'KG'
-                                    : 'Q'
-                            }
-                        </span>
-                    </div>
+                            <div class="ct-row">
+
+                                <span>
+                                    Grade
+                                </span>
+
+                                <span>
+                                    ${crop.grade}
+                                </span>
+
+                            </div>
 
 
-                    <div class="ct-actions">
+                            <div class="ct-row">
 
-                        <!-- Disabled until backend support exists -->
+                                <span>
+                                    Expected price
+                                </span>
 
-                        <button
-                            class="btn btn-outline btn-sm"
-                            disabled
-                        >
-                            Edit
-                        </button>
+                                <span>
 
-                        <button
-                            class="btn btn-danger btn-sm"
-                            disabled
-                        >
-                            Delete
-                        </button>
+                                    ${
+                                        crop.price > 0
+                                            ? "₹" +
+                                              crop.price.toLocaleString(
+                                                  "en-IN"
+                                              )
+                                            : "Not set"
+                                    }
 
-                    </div>
+                                </span>
 
-                </div>
+                            </div>
 
-            `)
-            .join('');
+
+                            <div class="ct-actions">
+
+                                <!--
+                                    Edit/Delete will be enabled
+                                    after the crop CRUD API is built.
+                                -->
+
+                                <button
+                                    class="
+                                        btn
+                                        btn-outline
+                                        btn-sm
+                                    "
+                                    disabled
+                                >
+                                    Edit
+                                </button>
+
+
+                                <button
+                                    class="
+                                        btn
+                                        btn-danger
+                                        btn-sm
+                                    "
+                                    disabled
+                                >
+                                    Delete
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    `;
+
+                })
+                .join("");
 
     }
 
 
-    document
-        .getElementById(
-            'cropSearch'
-        )
-        .addEventListener(
-            'input',
-            e =>
+    /* =========================================
+       CROP SEARCH
+       ========================================= */
+
+    const cropSearch =
+        document.getElementById(
+            "cropSearch"
+        );
+
+
+    if (cropSearch) {
+
+        cropSearch.addEventListener(
+            "input",
+            function (event) {
+
                 renderCrops(
-                    e.target.value
-                )
-        );
-
-
-    document
-        .getElementById(
-            'openAddCrop'
-        )
-        .addEventListener(
-            'click',
-            () => {
-
-                document
-                    .getElementById(
-                        'cropOverlay'
-                    )
-                    .classList.add(
-                        'active'
-                    );
+                    event.target.value
+                );
 
             }
         );
 
+    }
 
-    document
-        .getElementById(
-            'openAddCrop2'
-        )
-        .addEventListener(
-            'click',
-            () => {
 
-                document
-                    .getElementById(
-                        'cropOverlay'
-                    )
-                    .classList.add(
-                        'active'
+    /* =========================================
+       ADD CROP MODAL
+       ========================================= */
+
+    const openAddCrop =
+        document.getElementById(
+            "openAddCrop"
+        );
+
+
+    if (openAddCrop) {
+
+        openAddCrop.addEventListener(
+            "click",
+            function () {
+
+                const overlay =
+                    document.getElementById(
+                        "cropOverlay"
                     );
 
-            }
-        );
 
+                if (overlay) {
 
-    document
-        .getElementById(
-            'cancelCrop'
-        )
-        .addEventListener(
-            'click',
-            () =>
-                document
-                    .getElementById(
-                        'cropOverlay'
-                    )
-                    .classList.remove(
-                        'active'
-                    )
-        );
-
-
-    document
-        .getElementById(
-            'cropOverlay'
-        )
-        .addEventListener(
-            'click',
-            e => {
-
-                if (
-                    e.target.id ===
-                    'cropOverlay'
-                ){
-
-                    e.currentTarget
-                        .classList.remove(
-                            'active'
-                        );
+                    overlay.classList.add(
+                        "active"
+                    );
 
                 }
 
             }
         );
 
-
-    /* ---------- PRICES ---------- */
-
-    function renderPrices(){
-
-        const set = [
-            "All",
-            ...new Set(
-                state.prices.map(
-                    p => p.crop
-                )
-            )
-        ];
+    }
 
 
+    const openAddCrop2 =
         document.getElementById(
-            'priceChips'
-        ).innerHTML =
-
-            set.map(c =>
-
-                `
-                    <button
-                        class="
-                            chip
-                            ${
-                                state.priceFilter === c
-                                    ? 'active'
-                                    : ''
-                            }
-                        "
-                        data-chip="${c}"
-                    >
-                        ${c}
-                    </button>
-                `
-
-            ).join('');
+            "openAddCrop2"
+        );
 
 
-        document
-            .querySelectorAll(
-                '[data-chip]'
-            )
-            .forEach(
-                b =>
+    if (openAddCrop2) {
 
-                    b.addEventListener(
-                        'click',
-                        () => {
+        openAddCrop2.addEventListener(
+            "click",
+            function () {
 
-                            state.priceFilter =
-                                b.getAttribute(
-                                    'data-chip'
-                                );
+                const overlay =
+                    document.getElementById(
+                        "cropOverlay"
+                    );
 
-                            renderPrices();
 
-                        }
-                    )
+                if (overlay) {
 
+                    overlay.classList.add(
+                        "active"
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    const cancelCrop =
+        document.getElementById(
+            "cancelCrop"
+        );
+
+
+    if (cancelCrop) {
+
+        cancelCrop.addEventListener(
+            "click",
+            function () {
+
+                const overlay =
+                    document.getElementById(
+                        "cropOverlay"
+                    );
+
+
+                if (overlay) {
+
+                    overlay.classList.remove(
+                        "active"
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    const cropOverlay =
+        document.getElementById(
+            "cropOverlay"
+        );
+
+
+    if (cropOverlay) {
+
+        cropOverlay.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target.id ===
+                    "cropOverlay"
+                ) {
+
+                    event.currentTarget.classList.remove(
+                        "active"
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+    /* =========================================
+       MARKET PRICES
+       ========================================= */
+/* =========================================
+   MARKET PRICES + 7-DAY FORECAST
+   ========================================= */
+
+async function loadMarkets() {
+
+    const marketSelect =
+        document.getElementById("marketSelect");
+
+    const commoditySelect =
+        document.getElementById("commoditySelect");
+
+    const forecastButton =
+        document.getElementById("loadForecastBtn");
+
+    const errorBox =
+        document.getElementById("marketError");
+
+
+    if (
+        !marketSelect ||
+        !commoditySelect ||
+        !forecastButton
+    ) {
+        return;
+    }
+
+
+    marketSelect.innerHTML = `
+        <option value="">
+            Loading markets...
+        </option>
+    `;
+
+    marketSelect.disabled = true;
+
+    commoditySelect.innerHTML = `
+        <option value="">
+            Select commodity
+        </option>
+    `;
+
+    commoditySelect.disabled = true;
+
+    forecastButton.disabled = true;
+
+
+    if (errorBox) {
+        errorBox.textContent = "";
+    }
+
+
+    try {
+
+        const response =
+            await fetch("/api/markets/");
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Failed to load markets (${response.status})`
             );
 
+        }
 
-        const list =
-            state.priceFilter === "All"
 
-                ? state.prices
+        const data =
+            await response.json();
 
-                : state.prices.filter(
-                    p =>
-                        p.crop ===
-                        state.priceFilter
+
+        const markets =
+            Array.isArray(data.markets)
+                ? data.markets
+                : [];
+
+
+        if (!markets.length) {
+
+            throw new Error(
+                "No markets were returned by the API."
+            );
+
+        }
+
+
+        marketSelect.innerHTML = `
+            <option value="">
+                Select market
+            </option>
+        `;
+
+
+        markets.forEach(function (market) {
+
+            const option =
+                document.createElement("option");
+
+
+            /*
+             * Our markets API may return either:
+             *   "market name"
+             * or an object containing market_name.
+             */
+
+            if (
+                typeof market === "string"
+            ) {
+
+                option.value = market;
+
+                option.textContent = market;
+
+            } else {
+
+                const name =
+                    market.market_name ||
+                    market.marketName ||
+                    market.name ||
+                    "";
+
+
+                option.value = name;
+
+                option.textContent = name;
+
+            }
+
+
+            if (option.value) {
+
+                marketSelect.appendChild(
+                    option
                 );
 
+            }
 
+        });
+
+
+        marketSelect.disabled = false;
+
+
+    } catch (error) {
+
+        console.error(
+            "Market loading error:",
+            error
+        );
+
+
+        marketSelect.innerHTML = `
+            <option value="">
+                Unable to load markets
+            </option>
+        `;
+
+
+        if (errorBox) {
+
+            errorBox.textContent =
+                error.message;
+
+        }
+
+    }
+
+}
+
+
+async function loadCommodities(marketName) {
+
+    const commoditySelect =
         document.getElementById(
-            'fullPrices'
-        ).innerHTML = `
+            "commoditySelect"
+        );
+
+    const forecastButton =
+        document.getElementById(
+            "loadForecastBtn"
+        );
+
+    const errorBox =
+        document.getElementById(
+            "marketError"
+        );
+
+
+    if (
+        !commoditySelect ||
+        !forecastButton
+    ) {
+        return;
+    }
+
+
+    commoditySelect.innerHTML = `
+        <option value="">
+            Loading commodities...
+        </option>
+    `;
+
+
+    commoditySelect.disabled = true;
+
+    forecastButton.disabled = true;
+
+
+    if (errorBox) {
+        errorBox.textContent = "";
+    }
+
+
+    if (!marketName) {
+
+        commoditySelect.innerHTML = `
+            <option value="">
+                Select commodity
+            </option>
+        `;
+
+        return;
+
+    }
+
+
+    try {
+
+        const url =
+            `/api/markets/${encodeURIComponent(
+                marketName
+            )}/commodities`;
+
+
+        const response =
+            await fetch(url);
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Failed to load commodities (${response.status})`
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        const commodities =
+            Array.isArray(data.commodities)
+                ? data.commodities
+                : [];
+
+
+        commoditySelect.innerHTML = `
+            <option value="">
+                Select commodity
+            </option>
+        `;
+
+
+        commodities.forEach(
+            function (commodity) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+
+                option.value =
+                    commodity;
+
+
+                option.textContent =
+                    commodity;
+
+
+                commoditySelect.appendChild(
+                    option
+                );
+
+            }
+        );
+
+
+        commoditySelect.disabled =
+            commodities.length === 0;
+
+
+        if (!commodities.length) {
+
+            if (errorBox) {
+
+                errorBox.textContent =
+                    "No commodities available for this market.";
+
+            }
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Commodity loading error:",
+            error
+        );
+
+
+        commoditySelect.innerHTML = `
+            <option value="">
+                Unable to load commodities
+            </option>
+        `;
+
+
+        if (errorBox) {
+
+            errorBox.textContent =
+                error.message;
+
+        }
+
+    }
+
+}
+
+
+function resetForecastDisplay() {
+
+    const currentPrice =
+        document.getElementById(
+            "currentPrice"
+        );
+
+    const reportDate =
+        document.getElementById(
+            "reportDate"
+        );
+
+    const day7Price =
+        document.getElementById(
+            "day7Price"
+        );
+
+    const day7Date =
+        document.getElementById(
+            "day7Date"
+        );
+
+    const change7d =
+        document.getElementById(
+            "change7d"
+        );
+
+    const recommendation =
+        document.getElementById(
+            "recommendation"
+        );
+
+    const forecastTable =
+        document.getElementById(
+            "forecastTable"
+        );
+
+
+    if (currentPrice) {
+        currentPrice.textContent = "—";
+    }
+
+    if (reportDate) {
+        reportDate.textContent = "—";
+    }
+
+    if (day7Price) {
+        day7Price.textContent = "—";
+    }
+
+    if (day7Date) {
+        day7Date.textContent = "—";
+    }
+
+    if (change7d) {
+        change7d.textContent = "—";
+    }
+
+    if (recommendation) {
+        recommendation.textContent = "—";
+    }
+
+
+    if (forecastTable) {
+
+        forecastTable.innerHTML = `
 
             <tr>
-                <th>Crop</th>
-                <th>Mandi</th>
-                <th>Price</th>
-                <th>Change</th>
+                <th>Day</th>
+                <th>Date</th>
+                <th>Predicted Price</th>
             </tr>
 
-            ${
-                list.map(p => `
-
-                    <tr>
-
-                        <td>
-                            ${p.crop}
-                        </td>
-
-                        <td>
-                            ${p.market}
-                        </td>
-
-                        <td>
-                            ₹${p.price.toLocaleString('en-IN')}/${
-                                p.unit === 'KG'
-                                    ? 'KG'
-                                    : 'Q'
-                            }
-                        </td>
-
-                        <td
-                            class="${
-                                p.trend === 'up'
-                                    ? 'change-up'
-                                    : 'change-down'
-                            }"
-                        >
-                            ${
-                                p.trend === 'up'
-                                    ? '▲'
-                                    : '▼'
-                            }
-                            ${p.change}
-                        </td>
-
-                    </tr>
-
-                `).join('')
-            }
+            <tr>
+                <td colspan="3">
+                    No forecast loaded.
+                </td>
+            </tr>
 
         `;
 
     }
 
 
-    /* ---------- BUYERS ---------- */
-
-    function renderBuyers(){
-
+    const summary =
         document.getElementById(
-            'buyerGrid'
-        ).innerHTML =
-
-            state.buyers.map(b => `
-
-                <div class="crop-tile">
-
-                    <div class="ct-top">
-
-                        <span
-                            class="crop-badge"
-                        >
-                            ${b.name
-                                .charAt(0)
-                                .toUpperCase()}
-                        </span>
-
-                        <span
-                            class="pill pill-pending"
-                        >
-                            ★ ${b.rating}
-                        </span>
-
-                    </div>
+            "dashForecastSummary"
+        );
 
 
-                    <div class="ct-name">
-                        ${b.name}
-                    </div>
+    if (summary) {
+
+        summary.textContent =
+            "Select a market and commodity in Market Prices.";
+
+        summary.classList.add("empty");
+
+    }
+
+}
 
 
-                    <div class="ct-row">
-                        <span>Location</span>
-                        <span>${b.loc}</span>
-                    </div>
+async function loadForecast() {
+
+    const marketSelect =
+        document.getElementById(
+            "marketSelect"
+        );
+
+    const commoditySelect =
+        document.getElementById(
+            "commoditySelect"
+        );
+
+    const errorBox =
+        document.getElementById(
+            "marketError"
+        );
+
+    const market =
+        marketSelect
+            ? marketSelect.value
+            : "";
+
+    const commodity =
+        commoditySelect
+            ? commoditySelect.value
+            : "";
 
 
-                    <div class="ct-row">
-                        <span>Buys</span>
-                        <span>${b.deals}</span>
-                    </div>
+    if (!market || !commodity) {
 
+        if (errorBox) {
 
-                    <div class="ct-actions">
+            errorBox.textContent =
+                "Please select both market and commodity.";
 
-                        <button
-                            class="btn btn-primary btn-sm"
-                            data-contact="${b.name}"
-                        >
-                            Contact
-                        </button>
+        }
 
-                    </div>
-
-                </div>
-
-            `).join('');
-
-
-        document
-            .querySelectorAll(
-                '[data-contact]'
-            )
-            .forEach(
-                b =>
-
-                    b.addEventListener(
-                        'click',
-                        () =>
-                            toast(
-                                `Request sent to ${b.getAttribute('data-contact')}`
-                            )
-                    )
-
-            );
+        return;
 
     }
 
 
-    function renderFullRequests(){
+    if (errorBox) {
+        errorBox.textContent = "";
+    }
 
+
+    resetForecastDisplay();
+
+
+    const button =
         document.getElementById(
-            'fullRequests'
-        ).innerHTML =
+            "loadForecastBtn"
+        );
+
+
+    if (button) {
+
+        button.disabled = true;
+
+        button.textContent =
+            "Loading...";
+
+    }
+
+
+    try {
+
+        const url =
+            `/api/forecast/?market=${encodeURIComponent(
+                market
+            )}&commodity=${encodeURIComponent(
+                commodity
+            )}`;
+
+
+        const response =
+            await fetch(url);
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.error ||
+                "Failed to generate forecast."
+            );
+
+        }
+
+
+        /* -------------------------------------
+           CURRENT PRICE
+           ------------------------------------- */
+
+        const currentPrice =
+            document.getElementById(
+                "currentPrice"
+            );
+
+
+        const reportDate =
+            document.getElementById(
+                "reportDate"
+            );
+
+
+        if (currentPrice) {
+
+            currentPrice.textContent =
+                `₹${Number(
+                    data.current_price
+                ).toLocaleString(
+                    "en-IN",
+                    {
+                        maximumFractionDigits: 2
+                    }
+                )}`;
+
+        }
+
+
+        if (reportDate) {
+
+            reportDate.textContent =
+                `Report date: ${
+                    data.report_date
+                }`;
+
+        }
+
+
+        /* -------------------------------------
+           DAY 7
+           ------------------------------------- */
+
+        const day7 =
+            data.forecast &&
+            data.forecast.day_7;
+
+
+        const day7Price =
+            document.getElementById(
+                "day7Price"
+            );
+
+
+        const day7Date =
+            document.getElementById(
+                "day7Date"
+            );
+
+
+        if (day7) {
+
+            if (day7Price) {
+
+                day7Price.textContent =
+                    `₹${Number(
+                        day7.price
+                    ).toLocaleString(
+                        "en-IN",
+                        {
+                            maximumFractionDigits: 2
+                        }
+                    )}`;
+
+            }
+
+
+            if (day7Date) {
+
+                day7Date.textContent =
+                    `For ${day7.date}`;
+
+            }
+
+        }
+
+
+        /* -------------------------------------
+           CHANGE
+           ------------------------------------- */
+
+        const change7d =
+            document.getElementById(
+                "change7d"
+            );
+
+
+        if (change7d) {
+
+            const change =
+                Number(
+                    data.predicted_change_7d_pct
+                );
+
+
+            const sign =
+                change > 0
+                    ? "+"
+                    : "";
+
+
+            change7d.textContent =
+                `${sign}${change.toFixed(2)}%`;
+
+
+            change7d.classList.remove(
+                "change-up",
+                "change-down"
+            );
+
+
+            if (change > 0) {
+
+                change7d.classList.add(
+                    "change-up"
+                );
+
+            } else if (change < 0) {
+
+                change7d.classList.add(
+                    "change-down"
+                );
+
+            }
+
+        }
+
+
+        /* -------------------------------------
+           RECOMMENDATION
+           ------------------------------------- */
+
+        const recommendation =
+            document.getElementById(
+                "recommendation"
+            );
+
+
+        if (recommendation) {
+
+            recommendation.textContent =
+                data.recommendation ||
+                "NO STRONG SIGNAL";
+
+        }
+
+
+        /* -------------------------------------
+           7-DAY FORECAST TABLE
+           ------------------------------------- */
+
+        const forecastTable =
+            document.getElementById(
+                "forecastTable"
+            );
+
+
+        if (forecastTable) {
+
+            forecastTable.innerHTML = `
+
+                <tr>
+
+                    <th>
+                        Day
+                    </th>
+
+                    <th>
+                        Date
+                    </th>
+
+                    <th>
+                        Predicted Price
+                    </th>
+
+                </tr>
+
+            `;
+
+
+            for (
+                let day = 1;
+                day <= 7;
+                day++
+            ) {
+
+                const key =
+                    `day_${day}`;
+
+
+                const forecast =
+                    data.forecast &&
+                    data.forecast[key];
+
+
+                if (!forecast) {
+                    continue;
+                }
+
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                row.innerHTML = `
+
+                    <td>
+                        Day ${day}
+                    </td>
+
+                    <td>
+                        ${forecast.date}
+                    </td>
+
+                    <td>
+                        ₹${Number(
+                            forecast.price
+                        ).toLocaleString(
+                            "en-IN",
+                            {
+                                maximumFractionDigits: 2
+                            }
+                        )}
+                    </td>
+
+                `;
+
+
+                forecastTable.appendChild(
+                    row
+                );
+
+            }
+
+        }
+
+
+        /* -------------------------------------
+           DASHBOARD FORECAST SUMMARY
+           ------------------------------------- */
+
+        const summary =
+            document.getElementById(
+                "dashForecastSummary"
+            );
+
+
+        if (summary) {
+
+            summary.classList.remove(
+                "empty"
+            );
+
+
+            summary.innerHTML = `
+
+                <strong>
+                    ${commodity}
+                </strong>
+                at
+                <strong>
+                    ${market}
+                </strong>
+
+                <br>
+
+                Current:
+                <strong>
+                    ₹${Number(
+                        data.current_price
+                    ).toLocaleString(
+                        "en-IN",
+                        {
+                            maximumFractionDigits: 2
+                        }
+                    )}
+                </strong>
+
+                →
+
+                Day 7:
+                <strong>
+                    ₹${Number(
+                        day7.price
+                    ).toLocaleString(
+                        "en-IN",
+                        {
+                            maximumFractionDigits: 2
+                        }
+                    )}
+                </strong>
+
+                <br>
+
+                <strong>
+                    ${data.predicted_change_7d_pct}%
+                </strong>
+
+                ·
+
+                <strong>
+                    ${data.recommendation}
+                </strong>
+
+            `;
+
+        }
+
+
+    } catch (error) {
+
+        console.error(
+            "Forecast error:",
+            error
+        );
+
+
+        if (errorBox) {
+
+            errorBox.textContent =
+                error.message;
+
+        }
+
+    } finally {
+
+        if (button) {
+
+            button.disabled =
+                !(
+                    marketSelect &&
+                    commoditySelect &&
+                    marketSelect.value &&
+                    commoditySelect.value
+                );
+
+            button.textContent =
+                "Get Forecast";
+
+        }
+
+    }
+
+}
+
+
+function initializeMarketForecast() {
+
+    const marketSelect =
+        document.getElementById(
+            "marketSelect"
+        );
+
+    const commoditySelect =
+        document.getElementById(
+            "commoditySelect"
+        );
+
+    const forecastButton =
+        document.getElementById(
+            "loadForecastBtn"
+        );
+
+
+    if (
+        !marketSelect ||
+        !commoditySelect ||
+        !forecastButton
+    ) {
+        return;
+    }
+
+
+    marketSelect.addEventListener(
+        "change",
+        async function () {
+
+            resetForecastDisplay();
+
+            await loadCommodities(
+                marketSelect.value
+            );
+
+        }
+    );
+
+
+    commoditySelect.addEventListener(
+        "change",
+        function () {
+
+            forecastButton.disabled =
+                !(
+                    marketSelect.value &&
+                    commoditySelect.value
+                );
+
+        }
+    );
+
+
+    forecastButton.addEventListener(
+        "click",
+        loadForecast
+    );
+
+
+    loadMarkets();
+
+}
+
+    /* =========================================
+       BUYERS
+       ========================================= */
+
+    function renderBuyers() {
+
+        const buyerGrid =
+            document.getElementById(
+                "buyerGrid"
+            );
+
+
+        if (!buyerGrid) {
+            return;
+        }
+
+
+        if (!state.buyers.length) {
+
+            buyerGrid.innerHTML = `
+
+                <div class="empty">
+
+                    Buyer marketplace will appear
+                    after the buyer module is connected.
+
+                </div>
+
+            `;
+
+            return;
+
+        }
+
+
+        buyerGrid.innerHTML =
+            state.buyers
+                .map(function (buyer) {
+
+                    return `
+
+                        <div class="crop-tile">
+
+                            <div class="ct-top">
+
+                                <span class="crop-badge">
+
+                                    ${
+                                        buyer.name
+                                            .charAt(0)
+                                            .toUpperCase()
+                                    }
+
+                                </span>
+
+
+                                <span
+                                    class="
+                                        pill
+                                        pill-pending
+                                    "
+                                >
+                                    ★ ${buyer.rating}
+                                </span>
+
+                            </div>
+
+
+                            <div class="ct-name">
+                                ${buyer.name}
+                            </div>
+
+
+                            <div class="ct-row">
+
+                                <span>
+                                    Location
+                                </span>
+
+                                <span>
+                                    ${buyer.loc}
+                                </span>
+
+                            </div>
+
+
+                            <div class="ct-row">
+
+                                <span>
+                                    Buys
+                                </span>
+
+                                <span>
+                                    ${buyer.deals}
+                                </span>
+
+                            </div>
+
+
+                            <div class="ct-actions">
+
+                                <button
+                                    class="
+                                        btn
+                                        btn-primary
+                                        btn-sm
+                                    "
+                                    data-contact="${buyer.name}"
+                                >
+                                    Contact
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    `;
+
+                })
+                .join("");
+
+
+        document
+            .querySelectorAll(
+                "[data-contact]"
+            )
+            .forEach(function (button) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        toast(
+                            `Buyer contact will be connected through the matching module.`
+                        );
+
+                    }
+                );
+
+            });
+
+    }
+
+
+    /* =========================================
+       FULL REQUESTS
+       ========================================= */
+
+    function renderFullRequests() {
+
+        const fullRequests =
+            document.getElementById(
+                "fullRequests"
+            );
+
+
+        if (!fullRequests) {
+            return;
+        }
+
+
+        fullRequests.innerHTML =
             renderReqList(
                 state.requests
             );
@@ -1325,66 +2536,133 @@
     }
 
 
-    /* ---------- ORDERS ---------- */
+    /* =========================================
+       ORDERS
+       ========================================= */
 
-    function renderOrders(){
+    function renderOrders() {
 
-        document.getElementById(
-            'ordersTbl'
-        ).innerHTML = `
+        const ordersTable =
+            document.getElementById(
+                "ordersTbl"
+            );
+
+
+        if (!ordersTable) {
+            return;
+        }
+
+
+        if (!state.orders.length) {
+
+            ordersTable.innerHTML = `
+
+                <tr>
+
+                    <td
+                        colspan="7"
+                        class="empty"
+                    >
+
+                        Orders will appear here
+                        after the offer/transaction
+                        workflow is implemented.
+
+                    </td>
+
+                </tr>
+
+            `;
+
+            return;
+
+        }
+
+
+        ordersTable.innerHTML = `
 
             <tr>
-                <th>Order ID</th>
-                <th>Crop</th>
-                <th>Buyer</th>
-                <th>Qty</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Date</th>
+
+                <th>
+                    Order ID
+                </th>
+
+                <th>
+                    Crop
+                </th>
+
+                <th>
+                    Buyer
+                </th>
+
+                <th>
+                    Qty
+                </th>
+
+                <th>
+                    Amount
+                </th>
+
+                <th>
+                    Status
+                </th>
+
+                <th>
+                    Date
+                </th>
+
             </tr>
 
+
             ${
-                state.orders.map(o => `
+                state.orders
+                    .map(function (order) {
 
-                    <tr>
+                        return `
 
-                        <td>
-                            ${o.id}
-                        </td>
+                            <tr>
 
-                        <td>
-                            ${o.crop}
-                        </td>
+                                <td>
+                                    ${order.id}
+                                </td>
 
-                        <td>
-                            ${o.buyer}
-                        </td>
+                                <td>
+                                    ${order.crop}
+                                </td>
 
-                        <td>
-                            ${o.qty}
-                        </td>
+                                <td>
+                                    ${order.buyer}
+                                </td>
 
-                        <td>
-                            ${o.amount}
-                        </td>
+                                <td>
+                                    ${order.qty}
+                                </td>
 
-                        <td
-                            class="${
-                                o.status === 'Delivered'
-                                    ? 'change-up'
-                                    : ''
-                            }"
-                        >
-                            ${o.status}
-                        </td>
+                                <td>
+                                    ${order.amount}
+                                </td>
 
-                        <td>
-                            ${o.date}
-                        </td>
+                                <td
+                                    class="${
+                                        order.status ===
+                                        "Delivered"
+                                            ? "change-up"
+                                            : ""
+                                    }"
+                                >
+                                    ${order.status}
+                                </td>
 
-                    </tr>
+                                <td>
+                                    ${order.date}
+                                </td>
 
-                `).join('')
+                            </tr>
+
+                        `;
+
+                    })
+                    .join("")
             }
 
         `;
@@ -1392,27 +2670,39 @@
     }
 
 
-    /* ---------- PROFILE ---------- */
+    /* =========================================
+       PROFILE
+       ========================================= */
 
-    function renderProfile(){
+    function renderProfile() {
 
-        const f =
+        const profileView =
+            document.getElementById(
+                "profileView"
+            );
+
+
+        if (!profileView) {
+            return;
+        }
+
+
+        const farmer =
             state.farmer;
 
 
         const initials =
-            f.name
-                .split(' ')
-                .map(
-                    w => w[0]
-                )
-                .slice(0,2)
-                .join('');
+            farmer.name
+                .trim()
+                .split(/\s+/)
+                .map(function (word) {
+                    return word[0];
+                })
+                .slice(0, 2)
+                .join("");
 
 
-        document.getElementById(
-            'profileView'
-        ).innerHTML = `
+        profileView.innerHTML = `
 
             <div class="p-av">
                 ${initials}
@@ -1420,63 +2710,82 @@
 
 
             <div class="p-row">
-                <span>Name</span>
-                <span>${f.name}</span>
+
+                <span>
+                    Name
+                </span>
+
+                <span>
+                    ${farmer.name}
+                </span>
+
             </div>
 
 
             <div class="p-row">
+
                 <span>
                     Village / District
                 </span>
 
                 <span>
-                    ${f.village}
+                    ${farmer.village}
                 </span>
+
             </div>
 
 
             <div class="p-row">
+
                 <span>
                     Phone
                 </span>
 
                 <span>
-                    ${f.phone}
+                    ${farmer.phone || "Not provided"}
                 </span>
+
             </div>
 
 
             <div class="p-row">
+
                 <span>
                     Crops grown
                 </span>
 
                 <span>
-                    ${f.crops}
+                    ${farmer.crops || "Not set"}
                 </span>
+
             </div>
 
 
             <div class="p-row">
+
                 <span>
                     Land size
                 </span>
 
                 <span>
-                    ${f.land}
+                    ${
+                        farmer.land || "Not set"
+                    }
                 </span>
+
             </div>
 
 
             <div class="p-row">
+
                 <span>
                     Member since
                 </span>
 
                 <span>
-                    ${f.since}
+                    ${farmer.since}
                 </span>
+
             </div>
 
 
@@ -1496,44 +2805,54 @@
         `;
 
 
-        document
+        profileView
             .querySelectorAll(
-                '#profileView [data-nav]'
+                "[data-nav]"
             )
-            .forEach(
-                el =>
+            .forEach(function (element) {
 
-                    el.addEventListener(
-                        'click',
-                        () => {
+                element.addEventListener(
+                    "click",
+                    function () {
 
-                            activeGroup =
-                                'profile';
+                        activeGroup =
+                            "profile";
 
-                            goTo(
-                                'edit-profile'
-                            );
 
-                        }
-                    )
+                        goTo(
+                            "edit-profile"
+                        );
 
-            );
+                    }
+                );
+
+            });
 
     }
 
 
-    function renderEditProfile(){
+    /* =========================================
+       EDIT PROFILE
+       ========================================= */
 
-        // Currently local-only.
-        // Backend save logic was not implemented.
+    function renderEditProfile() {
 
-        const f =
+        const profileEdit =
+            document.getElementById(
+                "profileEdit"
+            );
+
+
+        if (!profileEdit) {
+            return;
+        }
+
+
+        const farmer =
             state.farmer;
 
 
-        document.getElementById(
-            'profileEdit'
-        ).innerHTML = `
+        profileEdit.innerHTML = `
 
             <div class="field">
 
@@ -1543,7 +2862,7 @@
 
                 <input
                     id="pfName"
-                    value="${f.name}"
+                    value="${farmer.name}"
                 >
 
             </div>
@@ -1557,7 +2876,7 @@
 
                 <input
                     id="pfVillage"
-                    value="${f.village}"
+                    value="${farmer.village}"
                 >
 
             </div>
@@ -1571,7 +2890,7 @@
 
                 <input
                     id="pfPhone"
-                    value="${f.phone}"
+                    value="${farmer.phone}"
                 >
 
             </div>
@@ -1585,7 +2904,7 @@
 
                 <input
                     id="pfCrops"
-                    value="${f.crops}"
+                    value="${farmer.crops}"
                 >
 
             </div>
@@ -1599,7 +2918,7 @@
 
                 <input
                     id="pfLand"
-                    value="${f.land}"
+                    value="${farmer.land}"
                 >
 
             </div>
@@ -1607,7 +2926,9 @@
 
             <div
                 class="modal-actions"
-                style="justify-content:flex-start;"
+                style="
+                    justify-content:flex-start;
+                "
             >
 
                 <button
@@ -1616,6 +2937,7 @@
                 >
                     Save changes
                 </button>
+
 
                 <button
                     class="btn btn-outline"
@@ -1629,135 +2951,179 @@
         `;
 
 
-        document.getElementById(
-            'pfSave'
-        ).addEventListener(
-            'click',
-            () => {
-
-                f.name =
-                    document.getElementById(
-                        'pfName'
-                    ).value.trim()
-                    || f.name;
-
-
-                f.village =
-                    document.getElementById(
-                        'pfVillage'
-                    ).value.trim()
-                    || f.village;
-
-
-                f.phone =
-                    document.getElementById(
-                        'pfPhone'
-                    ).value.trim()
-                    || f.phone;
-
-
-                f.crops =
-                    document.getElementById(
-                        'pfCrops'
-                    ).value.trim()
-                    || f.crops;
-
-
-                f.land =
-                    document.getElementById(
-                        'pfLand'
-                    ).value.trim()
-                    || f.land;
-
-
-                toast(
-                    "Profile updated (Local only)"
-                );
-
-
-                activeGroup =
-                    'profile';
-
-
-                goTo(
-                    'profile'
-                );
-
-
-                renderAll();
-
-            }
-        );
-
-
-        document.getElementById(
-            'pfCancel'
-        ).addEventListener(
-            'click',
-            () => {
-
-                activeGroup =
-                    'profile';
-
-                goTo(
-                    'profile'
-                );
-
-            }
-        );
-
-    }
-
-
-    /* ---------- RENDER ALL ---------- */
-
-    function renderAll(){
-
-        renderDashboard();
-
-        renderCrops(
+        const saveButton =
             document.getElementById(
-                'cropSearch'
-            ).value || ""
-        );
-
-        renderPrices();
-
-        renderBuyers();
-
-        renderFullRequests();
-
-        renderOrders();
-
-        renderProfile();
-
-        renderEditProfile();
-
-    }
+                "pfSave"
+            );
 
 
-    document.getElementById(
-        'menuToggle'
-    ).addEventListener(
-        'click',
-        () => {
+        if (saveButton) {
 
-            document
-                .querySelector(
-                    '.sidebar'
-                )
-                .classList.toggle(
-                    'collapsed'
-                );
+            saveButton.addEventListener(
+                "click",
+                function () {
+
+                    farmer.name =
+                        document.getElementById(
+                            "pfName"
+                        ).value.trim()
+                        || farmer.name;
+
+
+                    farmer.village =
+                        document.getElementById(
+                            "pfVillage"
+                        ).value.trim()
+                        || farmer.village;
+
+
+                    farmer.phone =
+                        document.getElementById(
+                            "pfPhone"
+                        ).value.trim()
+                        || farmer.phone;
+
+
+                    farmer.crops =
+                        document.getElementById(
+                            "pfCrops"
+                        ).value.trim()
+                        || farmer.crops;
+
+
+                    farmer.land =
+                        document.getElementById(
+                            "pfLand"
+                        ).value.trim()
+                        || farmer.land;
+
+
+                    /*
+                     * This is still local-only.
+                     *
+                     * We will connect it to a real
+                     * Flask profile update route later.
+                     */
+                    toast(
+                        "Profile updated locally."
+                    );
+
+
+                    activeGroup =
+                        "profile";
+
+
+                    goTo(
+                        "profile"
+                    );
+
+
+                    renderAll();
+
+                }
+            );
 
         }
+
+
+        const cancelButton =
+            document.getElementById(
+                "pfCancel"
+            );
+
+
+        if (cancelButton) {
+
+            cancelButton.addEventListener(
+                "click",
+                function () {
+
+                    activeGroup =
+                        "profile";
+
+
+                    goTo(
+                        "profile"
+                    );
+
+                }
+            );
+
+        }
+
+    }
+
+
+    /* =========================================
+       RENDER EVERYTHING
+       ========================================= */
+
+    function renderAll() {
+
+    renderDashboard();
+
+    const searchInput =
+        document.getElementById(
+            "cropSearch"
+        );
+
+    renderCrops(
+        searchInput
+            ? searchInput.value
+            : ""
     );
 
+    renderBuyers();
 
-    /* ---------- INIT ---------- */
+    renderFullRequests();
 
-    renderAll();
+    renderOrders();
 
-    renderNav();
+    renderProfile();
+
+    renderEditProfile();
+}
+
+
+    /* =========================================
+       MOBILE MENU
+       ========================================= */
+
+    const menuToggle =
+        document.getElementById(
+            "menuToggle"
+        );
+
+
+    if (menuToggle) {
+
+        menuToggle.addEventListener(
+            "click",
+            function () {
+
+                const sidebar =
+                    document.querySelector(
+                        ".sidebar"
+                    );
+
+
+                if (sidebar) {
+
+                    sidebar.classList.toggle(
+                        "collapsed"
+                    );
+
+                }
+
+            }
+        );
+
+    }
+
+
+       renderAll();
+       
+       renderNav();
+       initializeMarketForecast();
 
 })();
