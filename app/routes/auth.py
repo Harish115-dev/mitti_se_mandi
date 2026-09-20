@@ -1,18 +1,21 @@
+
 import bcrypt
+
 from flask import Blueprint, request, session, redirect, render_template
 
 from app.db.database import get_connection
 
+
 auth_bp = Blueprint("auth", __name__)
 
 
-# ---------- ported from login/login.php ----------
+# ---------- Login ----------
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
         return render_template("login.html")
 
-    email = request.form.get("email", "")
+    email = request.form.get("email", "").strip()
     password = request.form.get("password", "")
 
     if not email or not password:
@@ -21,109 +24,178 @@ def login():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # 1. User ko email se find karein
-    cursor.execute(
-        "SELECT id, full_name, role, password FROM users WHERE email = %s",
-        (email,),
-    )
-    rows = cursor.fetchall()
+    try:
+        cursor.execute(
+            """
+            SELECT id, full_name, role, password
+            FROM users
+            WHERE email = %s
+            """,
+            (email,),
+        )
 
-    if len(rows) == 1:
-        user = rows[0]
+        user = cursor.fetchone()
 
-        # 2. Password verify karein
-        if bcrypt.checkpw(password.encode("utf-8"), user["password"].encode("utf-8")):
+        if not user:
+            return "No account found with this email.", 404
 
-            # 3. Session set karein
-            session["user_id"] = user["id"]
-            session["user_name"] = user["full_name"]
-            session["user_role"] = user["role"]
-
-            cursor.close()
-            conn.close()
-
-            # 4. Role ke according redirect
-            if user["role"] == "farmer":
-                return redirect("/dashboard/farmer")
-            else:
-                return redirect("/dashboard/buyer")
-        else:
-            cursor.close()
-            conn.close()
+        if not bcrypt.checkpw(
+            password.encode("utf-8"),
+            user["password"].encode("utf-8"),
+        ):
             return "Invalid password. Please try again.", 401
-    else:
+
+        # Store user information in session
+        session["user_id"] = user["id"]
+        session["user_name"] = user["full_name"]
+        session["user_role"] = user["role"]
+
+        # Redirect according to role
+        if user["role"] == "farmer":
+            return redirect("/dashboard/farmer")
+
+        if user["role"] == "buyer":
+            return redirect("/dashboard/buyer")
+
+        return "Invalid user role.", 400
+
+    finally:
         cursor.close()
         conn.close()
-        return "No account found with this email.", 404
 
 
-# ---------- ported from registration/register.php ----------
+# ---------- Registration ----------
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "GET":
         return render_template("registration.html")
 
-    # 1. Form data receive karein
-    role = request.form.get("role", "")
-    fullName = request.form.get("fullName", "")
-    email = request.form.get("email", "")
-    phone = request.form.get("phone", "")
-    state = request.form.get("state", "")
-    city = request.form.get("city", "")
-    address = request.form.get("address", "")
+    # ---------- Form data ----------
+    role = request.form.get("role", "").strip().lower()
+
+    full_name = request.form.get("fullName", "").strip()
+    email = request.form.get("email", "").strip()
+    phone = request.form.get("phone", "").strip()
+
+    state = request.form.get("state", "").strip()
+    city = request.form.get("city", "").strip()
+    address = request.form.get("address", "").strip()
+
     password = request.form.get("password", "")
-    confirmPassword = request.form.get("confirmPassword", "")
+    confirm_password = request.form.get("confirmPassword", "")
 
     # Role-specific fields
-    crops = request.form.get("crops", "")
-    landSize = request.form.get("landSize", "")
-    businessName = request.form.get("businessName", "")
-    interests = request.form.get("interests", "")
+    crops = request.form.get("crops", "").strip()
+    land_size_raw = request.form.get("landSize", "").strip()
 
-    # 2. Basic validation
-    if not role or not fullName or not email or not password:
+    business_name = request.form.get("businessName", "").strip()
+    interests = request.form.get("interests", "").strip()
+
+    # ---------- Basic validation ----------
+    if not role or not full_name or not email or not password:
         return "Please fill all required fields.", 400
 
-    if password != confirmPassword:
+    if role not in {"farmer", "buyer"}:
+        return "Invalid role selected.", 400
+
+    if password != confirm_password:
         return "Passwords do not match.", 400
 
+    # ---------- Convert land size ----------
+    # MySQL DECIMAL column cannot accept ""
+    # Empty value should be stored as NULL.
+    if land_size_raw:
+        try:
+            land_size = float(land_size_raw)
+
+            if land_size < 0:
+                return "Land size cannot be negative.", 400
+
+        except ValueError:
+            return "Land size must be a valid number.", 400
+    else:
+        land_size = None
+
+    # ---------- Database connection ----------
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # 3. Email already exists check karein
-    cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
-    existing = cursor.fetchall()
+    try:
+        # ---------- Check duplicate email ----------
+        cursor.execute(
+            "SELECT id FROM users WHERE email = %s",
+            (email,),
+        )
 
-    if len(existing) > 0:
+        existing = cursor.fetchone()
+
+        if existing:
+            return "This email is already registered. Please login.", 409
+
+        # ---------- Hash password ----------
+        hashed_password = bcrypt.hashpw(
+            password.encode("utf-8"),
+            bcrypt.gensalt(),
+        ).decode("utf-8")
+
+        # ---------- Insert user ----------
+        cursor.execute(
+            """
+            INSERT INTO users
+            (
+                role,
+                full_name,
+                email,
+                phone,
+                password,
+                state,
+                city,
+                address,
+                crops,
+                land_size,
+                business_name,
+                interests
+            )
+            VALUES
+            (
+                %s, %s, %s, %s, %s, %s,
+                %s, %s, %s, %s, %s, %s
+            )
+            """,
+            (
+                role,
+                full_name,
+                email,
+                phone or None,
+                hashed_password,
+                state or None,
+                city or None,
+                address or None,
+                crops or None,
+                land_size,
+                business_name or None,
+                interests or None,
+            ),
+        )
+
+        conn.commit()
+
+        # ---------- Set session ----------
+        session["user_id"] = cursor.lastrowid
+        session["user_name"] = full_name
+        session["user_role"] = role
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
         cursor.close()
         conn.close()
-        return "This email is already registered. Please login.", 409
 
-    # 4. Password hash karein (SECURITY!)
-    hashedPassword = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
-
-    # 5. Data insert karein
-    cursor.execute(
-        """
-        INSERT INTO users
-        (role, full_name, email, phone, password, state, city, address, crops, land_size, business_name, interests)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """,
-        (role, fullName, email, phone, hashedPassword,
-         state, city, address, crops, landSize, businessName, interests),
-    )
-    conn.commit()
-
-    # Registration successful
-    session["user_id"] = cursor.lastrowid
-    session["user_name"] = fullName
-    session["user_role"] = role
-
-    cursor.close()
-    conn.close()
-
-    # Redirect based on role
+    # ---------- Redirect according to role ----------
     if role == "farmer":
         return redirect("/dashboard/farmer")
-    else:
-        return redirect("/dashboard/buyer")
+
+    return redirect("/dashboard/buyer")
+

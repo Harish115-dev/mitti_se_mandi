@@ -1,2797 +1,671 @@
+/* =========================================
+   FARMER DASHBOARD - FLASK VERSION
+   Uses real Flask APIs instead of PHP/static mock data.
+   ========================================= */
+
 (function () {
+    "use strict";
 
-    /* =========================================
-       FARMER DASHBOARD
-       Flask + Jinja + MySQL version
-
-       Real data currently used:
-       - Farmer profile
-       - Farmer crops
-
-       Not connected yet:
-       - Market prices
-       - Buyer requests
-       - Buyers
-       - Orders
-       ========================================= */
-
-
-    /* ---------- DATA FROM FLASK ---------- */
-
-    const fd = window.farmerData || {};
-    const dbCrops = window.myCrops || [];
-
-
-    /* ---------- APPLICATION STATE ---------- */
-
-    const state = {
-
-        farmer: {
-            name: fd.name || "Farmer",
-            village: fd.village || "Location",
-            phone: fd.phone || "",
-            crops: fd.crops || "Not set",
-            since: fd.since || "2024",
-            land: fd.land || "Not set"
-        },
-
-
-        /*
-         * Real crop data from Flask / MySQL.
-         */
-        crops: dbCrops.map(function (c) {
-
-            return {
-                id: c.id,
-
-                name: c.crop_name,
-
-                qty: c.quantity,
-
-                unit: c.quantity_unit || "quintal",
-
-                grade: c.grade || "Not graded",
-
-                price: Number(
-                    c.price || 0
-                ),
-
-                status: (
-                    c.status || "available"
-                ).toLowerCase()
-            };
-
-        }),
-
-
-        /*
-         * These modules are intentionally empty.
-         *
-         * We will connect them to real Flask APIs
-         * when their backend modules are implemented.
-         */
-        prices: [],
-
-        requests: [],
-
-        buyers: [],
-
-        orders: [],
-
-
-        priceFilter: "All"
-
-    };
-
-
-    /* =========================================
-       NAVIGATION CONFIGURATION
-       ========================================= */
+    const farmer = window.farmerData || {};
+    const crops = Array.isArray(window.myCrops) ? window.myCrops : [];
 
     const nav = {
-
-        dashboard: {
-            label: "Dashboard",
-            view: "dashboard"
-        },
-
-        "my-crops": {
-            label: "My Crops",
-            view: "my-crops"
-        },
-
-        "market-prices": {
-            label: "Market Prices",
-            view: "market-prices"
-        },
-
-        buyers: {
-            label: "Buyers",
-            view: "buyers"
-        },
-
-        orders: {
-            label: "Orders",
-            view: "orders"
-        },
-
-        profile: {
-            label: "Profile",
-            view: "profile"
-        }
-
+        dashboard: { label: "Dashboard", view: "dashboard" },
+        "my-crops": { label: "My Crops", view: "my-crops" },
+        "market-prices": { label: "Market Prices", view: "market-prices" },
+        buyers: { label: "Buyers", view: "buyers" },
+        orders: { label: "Orders", view: "orders" },
+        profile: { label: "Profile", view: "profile" },
     };
 
+    const viewToGroup = {
+        dashboard: "dashboard",
+        "my-crops": "my-crops",
+        "market-prices": "market-prices",
+        buyers: "buyers",
+        "buyer-requests": "buyers",
+        orders: "orders",
+        profile: "profile",
+        "edit-profile": "profile",
+    };
 
     let activeGroup = "dashboard";
 
-    let activeView = "dashboard";
+    const $ = (id) => document.getElementById(id);
 
+    function toast(message) {
+        const el = $("toast");
 
-    const viewToGroup = {
+        if (!el) return;
 
-        dashboard: "dashboard",
+        el.textContent = message;
+        el.classList.add("show");
 
-        "my-crops": "my-crops",
+        clearTimeout(el._timer);
 
-        "market-prices": "market-prices",
+        el._timer = setTimeout(() => {
+            el.classList.remove("show");
+        }, 2200);
+    }
 
-        buyers: "buyers",
+    function formatMoney(value) {
+        const number = Number(value);
 
-        "buyer-requests": "buyers",
+        if (!Number.isFinite(number)) {
+            return "—";
+        }
 
-        orders: "orders",
+        return `₹${number.toLocaleString("en-IN", {
+            maximumFractionDigits: 2,
+        })}`;
+    }
 
-        profile: "profile",
+    function initials(name) {
+        return (
+            String(name || "Farmer")
+                .split(/\s+/)
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((word) => word[0].toUpperCase())
+                .join("") || "F"
+        );
+    }
 
-        "edit-profile": "profile"
+    function normalizedStatus(status) {
+        return String(status || "")
+            .trim()
+            .toLowerCase();
+    }
 
-    };
+    function cropStatusClass(status) {
+        const normalized = normalizedStatus(status);
+
+        if (normalized === "available") {
+            return "pill-avail";
+        }
+
+        if (normalized === "sold") {
+            return "pill-sold";
+        }
+
+        return "pill-pending";
+    }
 
 
     /* =========================================
-       SIDEBAR
-       ========================================= */
-
-    const navList =
-        document.getElementById(
-            "navList"
-        );
-
-
-    if (navList) {
-
-        Object.keys(nav).forEach(function (key) {
-
-            const group = nav[key];
-
-
-            const li =
-                document.createElement("li");
-
-
-            const button =
-                document.createElement("button");
-
-
-            button.className =
-                "nav-btn"
-                +
-                (
-                    key === activeGroup
-                        ? " active"
-                        : ""
-                );
-
-
-            button.textContent =
-                group.label;
-
-
-            button.addEventListener(
-                "click",
-                function () {
-
-                    activeGroup = key;
-
-                    goTo(group.view);
-
-                    renderNav();
-
-                }
-            );
-
-
-            li.appendChild(button);
-
-            navList.appendChild(li);
-
-        });
-
-    }
-
+       NAVIGATION
+    ========================================= */
 
     function renderNav() {
+        const navList = $("navList");
 
-        document
-            .querySelectorAll(".nav-btn")
-            .forEach(function (button, index) {
+        if (!navList) return;
 
-                const key =
-                    Object.keys(nav)[index];
+        navList.innerHTML = "";
 
+        Object.entries(nav).forEach(([key, item]) => {
+            const li = document.createElement("li");
+            const button = document.createElement("button");
 
-                button.classList.toggle(
-                    "active",
-                    key === activeGroup
-                );
+            button.className =
+                `nav-btn${key === activeGroup ? " active" : ""}`;
 
+            button.textContent = item.label;
+
+            button.addEventListener("click", () => {
+                activeGroup = key;
+                goTo(item.view);
             });
 
+            li.appendChild(button);
+            navList.appendChild(li);
+        });
     }
 
-
-    function goTo(id) {
-
-        activeView = id;
-
-
-        document
-            .querySelectorAll(".view")
-            .forEach(function (view) {
-
-                view.classList.remove(
-                    "active"
-                );
-
-            });
-
-
-        const viewElement =
-            document.getElementById(
-                "view-" + id
-            );
-
-
-        if (viewElement) {
-
-            viewElement.classList.add(
-                "active"
-            );
-
-        }
-
-
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
+    function goTo(viewId) {
+        document.querySelectorAll(".view").forEach((view) => {
+            view.classList.remove("active");
         });
 
+        const target = $(`view-${viewId}`);
+
+        if (target) {
+            target.classList.add("active");
+        }
+
+        activeGroup = viewToGroup[viewId] || viewId;
 
         renderNav();
 
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+        });
+    }
+
+    function bindNavigation() {
+        document.querySelectorAll("[data-nav]").forEach((element) => {
+            element.addEventListener("click", () => {
+                const target = element.getAttribute("data-nav");
+
+                if (target) {
+                    goTo(target);
+                }
+            });
+        });
     }
 
 
     /* =========================================
-       DATA-NAV LINKS
-       ========================================= */
+       HEADER
+    ========================================= */
 
-    document
-        .querySelectorAll("[data-nav]")
-        .forEach(function (element) {
+    function renderHeader() {
+        const name = farmer.full_name || "Farmer";
 
-            element.addEventListener(
-                "click",
-                function () {
+        const firstName =
+            name.split(/\s+/)[0] || "Farmer";
 
-                    const target =
-                        element.getAttribute(
-                            "data-nav"
-                        );
+        const avatar = initials(name).slice(0, 2);
 
+        if ($("topAv")) {
+            $("topAv").textContent = avatar;
+        }
 
-                    activeGroup =
-                        viewToGroup[target]
-                        || target;
+        if ($("topName")) {
+            $("topName").textContent = name;
+        }
 
+        if ($("greeting")) {
+            $("greeting").textContent =
+                `Good Day, ${firstName}!`;
+        }
 
-                    goTo(target);
-
-                }
-            );
-
-        });
+        if ($("weatherPlace")) {
+            $("weatherPlace").textContent =
+                [farmer.city, farmer.state]
+                    .filter(Boolean)
+                    .join(", ") || "Your location";
+        }
+    }
 
 
     /* =========================================
-       TOAST
-       ========================================= */
+       DASHBOARD STATS
+    ========================================= */
 
-    function toast(message) {
+    function renderDashboardStats() {
+        const totalCrops = crops.length;
 
-        const toastElement =
-            document.getElementById(
-                "toast"
-            );
+        const activeListings = crops.filter(
+            (crop) =>
+                normalizedStatus(crop.status) === "available"
+        ).length;
+
+        if (!$("statGrid")) return;
+
+        $("statGrid").innerHTML = `
+            <div class="stat-card">
+                <div class="stat-label">Total Crops</div>
+                <div class="stat-value">${totalCrops}</div>
+                <div class="stat-note">
+                    Currently listed
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Active Listings</div>
+                <div class="stat-value">${activeListings}</div>
+                <div class="stat-note">
+                    Available for sale
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Pending Orders</div>
+                <div class="stat-value">0</div>
+                <div class="stat-note">
+                    Marketplace phase
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Total Sales</div>
+                <div class="stat-value">—</div>
+                <div class="stat-note">
+                    Transactions phase
+                </div>
+            </div>
+        `;
+    }
 
 
-        if (!toastElement) {
+    /* =========================================
+       DASHBOARD CROP PREVIEW
+    ========================================= */
+
+    function renderDashboardCrops() {
+        if (!$("dashCropList")) return;
+
+        if (!crops.length) {
+            $("dashCropList").innerHTML =
+                `<div class="empty">No crops listed yet.</div>`;
+
             return;
         }
 
-
-        toastElement.textContent =
-            message;
-
-
-        toastElement.classList.add(
-            "show"
-        );
-
-
-        clearTimeout(
-            toastElement._tm
-        );
-
-
-        toastElement._tm =
-            setTimeout(
-                function () {
-
-                    toastElement.classList.remove(
-                        "show"
-                    );
-
-                },
-                2200
-            );
-
-    }
-
-
-    /* =========================================
-       UNIT LABEL
-       ========================================= */
-
-    function unitLabel(unit) {
-
-        if (!unit) {
-            return "";
-        }
-
-
-        return String(unit);
-
-    }
-
-
-    /* =========================================
-       STATUS CLASS
-       ========================================= */
-
-    function getStatusClass(status) {
-
-        const normalized =
-            String(
-                status || ""
-            ).toLowerCase();
-
-
-        if (
-            normalized === "available"
-            ||
-            normalized === "listed"
-            ||
-            normalized === "accepted"
-        ) {
-
-            return "pill-avail";
-
-        }
-
-
-        if (
-            normalized === "pending"
-            ||
-            normalized === "draft"
-        ) {
-
-            return "pill-pending";
-
-        }
-
-
-        return "pill-sold";
-
-    }
-
-
-    /* =========================================
-       DASHBOARD
-       ========================================= */
-
-    function renderDashboard() {
-
-        const farmer =
-            state.farmer;
-
-
-        const nameParts =
-            farmer.name
-                .trim()
-                .split(/\s+/);
-
-
-        const initials =
-            nameParts
-                .map(function (word) {
-                    return word.charAt(0);
-                })
-                .slice(0, 2)
-                .join("");
-
-
-        const topAvatar =
-            document.getElementById(
-                "topAv"
-            );
-
-
-        if (topAvatar) {
-
-            topAvatar.textContent =
-                initials || "F";
-
-        }
-
-
-        const topName =
-            document.getElementById(
-                "topName"
-            );
-
-
-        if (topName) {
-
-            topName.textContent =
-                farmer.name;
-
-        }
-
-
-        const logoInitial =
-            document.getElementById(
-                "logoInit"
-            );
-
-
-        if (logoInitial) {
-
-            logoInitial.textContent =
-                "M";
-
-        }
-
-
-        const greeting =
-            document.getElementById(
-                "greeting"
-            );
-
-
-        if (greeting) {
-
-            greeting.textContent =
-                `Good Morning, ${
-                    nameParts[0] || "Farmer"
-                }!`;
-
-        }
-
-
-        /* -------------------------------------
-           REAL CROP STATISTICS
-           ------------------------------------- */
-
-        const totalCrops =
-            state.crops.length;
-
-
-        const activeListings =
-            state.crops.filter(
-                function (crop) {
-
-                    return (
-                        crop.status === "available"
-                        ||
-                        crop.status === "listed"
-                    );
-
-                }
-            ).length;
-
-
-        /*
-         * Marketplace module is not implemented yet.
-         * Never display fake order numbers.
-         */
-        const pendingOrders = 0;
-
-
-        /*
-         * Transaction module is not implemented yet.
-         * Never display fake sales.
-         */
-        const totalSales = 0;
-
-
-        const statGrid =
-            document.getElementById(
-                "statGrid"
-            );
-
-
-        if (statGrid) {
-
-            statGrid.innerHTML = `
-
-                <div class="stat-card">
-
-                    <div class="stat-label">
-                        Total Crops
-                    </div>
-
-                    <div class="stat-value">
-                        ${totalCrops}
-                    </div>
-
-                    <div class="stat-note">
-                        Currently listed
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-label">
-                        Active Listings
-                    </div>
-
-                    <div class="stat-value">
-                        ${activeListings}
-                    </div>
-
-                    <div class="stat-note">
-                        Available for sale
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-label">
-                        Pending Orders
-                    </div>
-
-                    <div class="stat-value">
-                        ${pendingOrders}
-                    </div>
-
-                    <div class="stat-note">
-                        Marketplace module pending
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <div class="stat-label">
-                        Total Sales
-                    </div>
-
-                    <div class="stat-value">
-                        ₹${totalSales.toLocaleString(
-                            "en-IN"
-                        )}
-                    </div>
-
-                    <div class="stat-note">
-                        Transaction module pending
-                    </div>
-
-                </div>
-
-            `;
-
-        }
-
-
-        /* -------------------------------------
-           FARMER CROPS
-           ------------------------------------- */
-
-        const dashCropList =
-            document.getElementById(
-                "dashCropList"
-            );
-
-
-        if (dashCropList) {
-
-            if (!state.crops.length) {
-
-                dashCropList.innerHTML = `
-                    <div class="empty">
-                        No crops listed yet.
-                    </div>
-                `;
-
-            } else {
-
-                dashCropList.innerHTML =
-                    state.crops
-                        .slice(0, 3)
-                        .map(function (crop) {
-
-                            return `
-
-                                <div class="crop-row">
-
-                                    <div>
-
-                                        <div class="crop-name">
-                                            ${crop.name}
-                                        </div>
-
-                                        <div class="crop-meta">
-
-                                            ${
-                                                crop.qty
-                                            }
-
-                                            ${
-                                                unitLabel(
-                                                    crop.unit
-                                                )
-                                            }
-
-                                            ·
-
-                                            ${
-                                                crop.grade
-                                            }
-
-                                        </div>
-
-                                    </div>
-
-
-                                    <div
-                                        style="
-                                            text-align:right;
-                                        "
-                                    >
-
-                                        <div class="crop-price">
-
-                                            ${
-                                                crop.price > 0
-                                                    ? "₹" +
-                                                      crop.price.toLocaleString(
-                                                          "en-IN"
-                                                      )
-                                                    : "—"
-                                            }
-
-                                            ${
-                                                crop.price > 0
-                                                    ? "/" +
-                                                      unitLabel(
-                                                          crop.unit
-                                                      )
-                                                    : ""
-                                            }
-
-                                        </div>
-
-
-                                        <span
-                                            class="
-                                                pill
-                                                ${getStatusClass(
-                                                    crop.status
-                                                )}
-                                            "
-                                        >
-                                            ${crop.status}
-                                        </span>
-
-                                    </div>
-
-                                </div>
-
-                            `;
-
-                        })
-                        .join("");
-
-            }
-
-        }
-
-
-        /* -------------------------------------
-           MARKET PRICE PREVIEW
-           ------------------------------------- */
-
-        const dashPriceList =
-            document.getElementById(
-                "dashPriceList"
-            );
-
-
-        if (dashPriceList) {
-
-            if (!state.prices.length) {
-
-                dashPriceList.innerHTML = `
-                    <div class="empty">
-                        Market price data will appear here
-                        after the market API is connected.
-                    </div>
-                `;
-
-            } else {
-
-                dashPriceList.innerHTML =
-                    state.prices
-                        .slice(0, 4)
-                        .map(function (price) {
-
-                            return `
-
-                                <div class="price-row">
-
-                                    <div class="price-crop">
-                                        ${price.crop}
-                                    </div>
-
-                                    <div class="price-right">
-
-                                        <div class="price-val">
-                                            ₹${Number(
-                                                price.price
-                                            ).toLocaleString(
-                                                "en-IN"
-                                            )}/${price.unit}
-                                        </div>
-
-                                        <div
-                                            class="${
-                                                price.trend === "up"
-                                                    ? "change-up"
-                                                    : "change-down"
-                                            }"
-                                        >
-
-                                            ${
-                                                price.trend === "up"
-                                                    ? "▲"
-                                                    : "▼"
-                                            }
-
-                                            ${price.change}
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            `;
-
-                        })
-                        .join("");
-
-            }
-
-        }
-
-
-        /* -------------------------------------
-           BUYER REQUESTS
-           ------------------------------------- */
-
-        const dashRequests =
-            document.getElementById(
-                "dashRequests"
-            );
-
-
-        if (dashRequests) {
-
-            dashRequests.innerHTML =
-                renderReqList(
-                    state.requests.slice(0, 3)
-                );
-
-
-            bindReqButtons();
-
-        }
-
-    }
-
-
-    /* =========================================
-       REQUEST LIST
-       ========================================= */
-
-    function renderReqList(list) {
-
-        if (!list.length) {
-
-            return `
-                <div class="empty">
-                    No buyer requests yet.
-                </div>
-            `;
-
-        }
-
-
-        return list
-            .map(function (request) {
-
-                const initials =
-                    request.buyer
-                        .split(" ")
-                        .map(function (word) {
-                            return word[0];
-                        })
-                        .slice(0, 2)
-                        .join("");
-
+        $("dashCropList").innerHTML =
+            crops.slice(0, 3).map((crop) => {
+
+                const status =
+                    normalizedStatus(crop.status);
+
+                const canPublish =
+                    status === "available" &&
+                    crop.id;
 
                 return `
+                    <div class="crop-row">
 
-                    <div class="req-row">
+                        <div>
 
-                        <div
-                            style="
-                                display:flex;
-                                align-items:center;
-                                gap:12px;
-                            "
-                        >
-
-                            <div class="req-av">
-                                ${initials}
+                            <div class="crop-name">
+                                ${escapeHtml(
+                                    crop.crop_name || "Crop"
+                                )}
                             </div>
 
-                            <div>
-
-                                <div class="req-name">
-                                    ${request.buyer}
-                                </div>
-
-                                <div class="req-meta">
-                                    ${request.crop}
-                                    ·
-                                    ${request.qty}
-                                    ·
-                                    ${request.when}
-                                </div>
-
+                            <div class="crop-meta">
+                                ${escapeHtml(
+                                    String(
+                                        crop.quantity ?? "—"
+                                    )
+                                )}
+                                Quintal
+                                ·
+                                ${escapeHtml(
+                                    crop.grade ||
+                                    "Not graded"
+                                )}
                             </div>
 
                         </div>
 
 
-                        <div
-                            style="
-                                display:flex;
-                                gap:8px;
-                                align-items:center;
-                            "
-                        >
+                        <div style="text-align:right;">
+
+                            <div class="crop-price">
+                                ${formatMoney(crop.price)}/Quintal
+                            </div>
+
 
                             <span
-                                style="
-                                    font-weight:700;
-                                    font-size:0.9rem;
-                                    margin-right:4px;
+                                class="
+                                    pill
+                                    ${cropStatusClass(crop.status)}
                                 "
                             >
-                                ${request.price}
+                                ${escapeHtml(
+                                    crop.status ||
+                                    "Unknown"
+                                )}
                             </span>
 
 
                             ${
-                                request.status === "pending"
+                                canPublish
+                                    ? `
+                                        <div
+                                            style="margin-top:8px;"
+                                        >
 
-                                ? `
+                                            <form
+                                                action="/lots/publish/${encodeURIComponent(
+                                                    crop.id
+                                                )}"
+                                                method="POST"
+                                                onsubmit="
+                                                    return confirm(
+                                                        'Publish this crop to the marketplace?'
+                                                    );
+                                                "
+                                            >
 
-                                    <button
-                                        class="btn btn-primary btn-sm"
-                                        data-acc="${request.id}"
-                                    >
-                                        Accept
-                                    </button>
+                                                <button
+                                                    type="submit"
+                                                    class="btn btn-primary btn-small"
+                                                >
+                                                    Publish
+                                                </button>
 
-                                    <button
-                                        class="btn btn-outline btn-sm"
-                                        data-dec="${request.id}"
-                                    >
-                                        Decline
-                                    </button>
+                                            </form>
 
-                                `
-
-                                :
-
-                                `
-
-                                    <span
-                                        class="
-                                            pill
-                                            ${getStatusClass(
-                                                request.status
-                                            )}
-                                        "
-                                    >
-                                        ${request.status}
-                                    </span>
-
-                                `
+                                        </div>
+                                      `
+                                    : ""
                             }
 
                         </div>
 
                     </div>
-
                 `;
-
-            })
-            .join("");
-
+            }).join("");
     }
 
 
     /* =========================================
-       REQUEST BUTTONS
-       ========================================= */
+       MY CROPS
+    ========================================= */
 
-    function bindReqButtons() {
+    function renderCrops(filter = "") {
+        if (!$("cropGrid")) return;
 
-        document
-            .querySelectorAll(
-                "[data-acc]"
-            )
-            .forEach(function (button) {
+        const query =
+            filter.trim().toLowerCase();
 
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        const request =
-                            state.requests.find(
-                                function (item) {
-
-                                    return (
-                                        item.id ==
-                                        button.getAttribute(
-                                            "data-acc"
-                                        )
-                                    );
-
-                                }
-                            );
-
-
-                        if (request) {
-
-                            request.status =
-                                "accepted";
-
-
-                            toast(
-                                `Accepted request from ${request.buyer}`
-                            );
-
-
-                            renderAll();
-
-                        }
-
-                    }
-                );
-
-            });
-
-
-        document
-            .querySelectorAll(
-                "[data-dec]"
-            )
-            .forEach(function (button) {
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        const request =
-                            state.requests.find(
-                                function (item) {
-
-                                    return (
-                                        item.id ==
-                                        button.getAttribute(
-                                            "data-dec"
-                                        )
-                                    );
-
-                                }
-                            );
-
-
-                        if (request) {
-
-                            request.status =
-                                "declined";
-
-
-                            toast(
-                                `Declined request from ${request.buyer}`
-                            );
-
-
-                            renderAll();
-
-                        }
-
-                    }
-                );
-
-            });
-
-    }
-
-
-    /* =========================================
-       CROPS
-       ========================================= */
-
-    function renderCrops(
-        filter = ""
-    ) {
-
-        const normalizedFilter =
-            filter
-                .trim()
-                .toLowerCase();
-
-
-        const list =
-            state.crops.filter(
-                function (crop) {
-
-                    return crop.name
-                        .toLowerCase()
-                        .includes(
-                            normalizedFilter
-                        );
-
-                }
+        const filtered =
+            crops.filter((crop) =>
+                String(
+                    crop.crop_name || ""
+                )
+                    .toLowerCase()
+                    .includes(query)
             );
 
+        const grid = $("cropGrid");
 
-        const grid =
-            document.getElementById(
-                "cropGrid"
-            );
-
-
-        if (!grid) {
-            return;
-        }
-
-
-        if (!list.length) {
-
-            grid.innerHTML = `
-
-                <div class="empty">
-
-                    ${
-                        normalizedFilter
-                            ? `No crops match "${filter}".`
-                            : "No crops listed yet."
-                    }
-
-                </div>
-
-            `;
+        if (!filtered.length) {
+            grid.innerHTML =
+                `<div class="empty">
+                    No crops match your search.
+                </div>`;
 
             return;
-
         }
-
 
         grid.innerHTML =
-            list
-                .map(function (crop) {
+            filtered.map((crop) => {
 
-                    return `
+                const status =
+                    normalizedStatus(crop.status);
 
-                        <div class="crop-tile">
+                const canPublish =
+                    status === "available" &&
+                    crop.id;
 
-                            <div class="ct-top">
-
-                                <span class="crop-badge">
-
-                                    ${
-                                        crop.name
-                                            .charAt(0)
-                                            .toUpperCase()
-                                    }
-
-                                </span>
+                return `
+                    <div class="crop-tile">
 
 
-                                <span
-                                    class="
-                                        pill
-                                        ${getStatusClass(
-                                            crop.status
-                                        )}
-                                    "
-                                >
-                                    ${crop.status}
-                                </span>
+                        <!-- Crop header -->
+                        <div class="ct-top">
 
-                            </div>
+                            <span class="crop-badge">
 
+                                ${escapeHtml(
+                                    String(
+                                        crop.crop_name || "C"
+                                    )
+                                        .charAt(0)
+                                        .toUpperCase()
+                                )}
 
-                            <div class="ct-name">
-                                ${crop.name}
-                            </div>
+                            </span>
 
 
-                            <div class="ct-row">
-
-                                <span>
-                                    Quantity
-                                </span>
-
-                                <span>
-                                    ${crop.qty}
-                                    ${unitLabel(crop.unit)}
-                                </span>
-
-                            </div>
-
-
-                            <div class="ct-row">
-
-                                <span>
-                                    Grade
-                                </span>
-
-                                <span>
-                                    ${crop.grade}
-                                </span>
-
-                            </div>
-
-
-                            <div class="ct-row">
-
-                                <span>
-                                    Expected price
-                                </span>
-
-                                <span>
-
-                                    ${
-                                        crop.price > 0
-                                            ? "₹" +
-                                              crop.price.toLocaleString(
-                                                  "en-IN"
-                                              )
-                                            : "Not set"
-                                    }
-
-                                </span>
-
-                            </div>
-
-
-                            <div class="ct-actions">
-
-                                <!--
-                                    Edit/Delete will be enabled
-                                    after the crop CRUD API is built.
-                                -->
-
-                                <button
-                                    class="
-                                        btn
-                                        btn-outline
-                                        btn-sm
-                                    "
-                                    disabled
-                                >
-                                    Edit
-                                </button>
-
-
-                                <button
-                                    class="
-                                        btn
-                                        btn-danger
-                                        btn-sm
-                                    "
-                                    disabled
-                                >
-                                    Delete
-                                </button>
-
-                            </div>
+                            <span
+                                class="
+                                    pill
+                                    ${cropStatusClass(crop.status)}
+                                "
+                            >
+                                ${escapeHtml(
+                                    crop.status ||
+                                    "Unknown"
+                                )}
+                            </span>
 
                         </div>
 
-                    `;
 
-                })
-                .join("");
 
-    }
+                        <!-- Crop name -->
+                        <div class="ct-name">
 
+                            ${escapeHtml(
+                                crop.crop_name ||
+                                "Crop"
+                            )}
 
-    /* =========================================
-       CROP SEARCH
-       ========================================= */
+                        </div>
 
-    const cropSearch =
-        document.getElementById(
-            "cropSearch"
-        );
 
 
-    if (cropSearch) {
+                        <!-- Quantity -->
+                        <div class="ct-row">
 
-        cropSearch.addEventListener(
-            "input",
-            function (event) {
+                            <span>
+                                Quantity
+                            </span>
 
-                renderCrops(
-                    event.target.value
-                );
+                            <span>
 
-            }
-        );
+                                ${escapeHtml(
+                                    String(
+                                        crop.quantity ?? "—"
+                                    )
+                                )}
 
-    }
+                                Quintal
 
+                            </span>
 
-    /* =========================================
-       ADD CROP MODAL
-       ========================================= */
+                        </div>
 
-    const openAddCrop =
-        document.getElementById(
-            "openAddCrop"
-        );
 
 
-    if (openAddCrop) {
+                        <!-- Grade -->
+                        <div class="ct-row">
 
-        openAddCrop.addEventListener(
-            "click",
-            function () {
+                            <span>
+                                Grade
+                            </span>
 
-                const overlay =
-                    document.getElementById(
-                        "cropOverlay"
-                    );
+                            <span>
 
+                                ${escapeHtml(
+                                    crop.grade || "—"
+                                )}
 
-                if (overlay) {
+                            </span>
 
-                    overlay.classList.add(
-                        "active"
-                    );
+                        </div>
 
-                }
 
-            }
-        );
 
-    }
+                        <!-- Price -->
+                        <div class="ct-row">
 
+                            <span>
+                                Price
+                            </span>
 
-    const openAddCrop2 =
-        document.getElementById(
-            "openAddCrop2"
-        );
+                            <span>
 
+                                ${formatMoney(
+                                    crop.price
+                                )}/Quintal
 
-    if (openAddCrop2) {
+                            </span>
 
-        openAddCrop2.addEventListener(
-            "click",
-            function () {
+                        </div>
 
-                const overlay =
-                    document.getElementById(
-                        "cropOverlay"
-                    );
 
 
-                if (overlay) {
+                        <!-- Marketplace action -->
+                        ${
+                            canPublish
+                                ? `
+                                    <div class="ct-actions">
 
-                    overlay.classList.add(
-                        "active"
-                    );
+                                        <form
+                                            action="/lots/publish/${encodeURIComponent(
+                                                crop.id
+                                            )}"
+                                            method="POST"
+                                            onsubmit="
+                                                return confirm(
+                                                    'Publish this crop to the marketplace?'
+                                                );
+                                            "
+                                        >
 
-                }
+                                            <button
+                                                type="submit"
+                                                class="btn btn-primary btn-small"
+                                            >
+                                                Publish to Marketplace
+                                            </button>
 
-            }
-        );
+                                        </form>
 
-    }
+                                    </div>
+                                  `
+                                : `
+                                    <div class="ct-actions">
 
+                                        <span
+                                            class="marketplace-state"
+                                        >
 
-    const cancelCrop =
-        document.getElementById(
-            "cancelCrop"
-        );
+                                            ${
+                                                status ===
+                                                "pending"
 
+                                                    ? "Marketplace processing"
 
-    if (cancelCrop) {
+                                                    : status ===
+                                                      "sold"
 
-        cancelCrop.addEventListener(
-            "click",
-            function () {
+                                                        ? "Crop sold"
 
-                const overlay =
-                    document.getElementById(
-                        "cropOverlay"
-                    );
+                                                        : "Unavailable"
+                                            }
 
+                                        </span>
 
-                if (overlay) {
-
-                    overlay.classList.remove(
-                        "active"
-                    );
-
-                }
-
-            }
-        );
-
-    }
-
-
-    const cropOverlay =
-        document.getElementById(
-            "cropOverlay"
-        );
-
-
-    if (cropOverlay) {
-
-        cropOverlay.addEventListener(
-            "click",
-            function (event) {
-
-                if (
-                    event.target.id ===
-                    "cropOverlay"
-                ) {
-
-                    event.currentTarget.classList.remove(
-                        "active"
-                    );
-
-                }
-
-            }
-        );
-
-    }
-
-
-    /* =========================================
-       MARKET PRICES
-       ========================================= */
-/* =========================================
-   MARKET PRICES + 7-DAY FORECAST
-   ========================================= */
-
-async function loadMarkets() {
-
-    const marketSelect =
-        document.getElementById("marketSelect");
-
-    const commoditySelect =
-        document.getElementById("commoditySelect");
-
-    const forecastButton =
-        document.getElementById("loadForecastBtn");
-
-    const errorBox =
-        document.getElementById("marketError");
-
-
-    if (
-        !marketSelect ||
-        !commoditySelect ||
-        !forecastButton
-    ) {
-        return;
-    }
-
-
-    marketSelect.innerHTML = `
-        <option value="">
-            Loading markets...
-        </option>
-    `;
-
-    marketSelect.disabled = true;
-
-    commoditySelect.innerHTML = `
-        <option value="">
-            Select commodity
-        </option>
-    `;
-
-    commoditySelect.disabled = true;
-
-    forecastButton.disabled = true;
-
-
-    if (errorBox) {
-        errorBox.textContent = "";
-    }
-
-
-    try {
-
-        const response =
-            await fetch("/api/markets/");
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                `Failed to load markets (${response.status})`
-            );
-
-        }
-
-
-        const data =
-            await response.json();
-
-
-        const markets =
-            Array.isArray(data.markets)
-                ? data.markets
-                : [];
-
-
-        if (!markets.length) {
-
-            throw new Error(
-                "No markets were returned by the API."
-            );
-
-        }
-
-
-        marketSelect.innerHTML = `
-            <option value="">
-                Select market
-            </option>
-        `;
-
-
-        markets.forEach(function (market) {
-
-            const option =
-                document.createElement("option");
-
-
-            /*
-             * Our markets API may return either:
-             *   "market name"
-             * or an object containing market_name.
-             */
-
-            if (
-                typeof market === "string"
-            ) {
-
-                option.value = market;
-
-                option.textContent = market;
-
-            } else {
-
-                const name =
-                    market.market_name ||
-                    market.marketName ||
-                    market.name ||
-                    "";
-
-
-                option.value = name;
-
-                option.textContent = name;
-
-            }
-
-
-            if (option.value) {
-
-                marketSelect.appendChild(
-                    option
-                );
-
-            }
-
-        });
-
-
-        marketSelect.disabled = false;
-
-
-    } catch (error) {
-
-        console.error(
-            "Market loading error:",
-            error
-        );
-
-
-        marketSelect.innerHTML = `
-            <option value="">
-                Unable to load markets
-            </option>
-        `;
-
-
-        if (errorBox) {
-
-            errorBox.textContent =
-                error.message;
-
-        }
-
-    }
-
-}
-
-
-async function loadCommodities(marketName) {
-
-    const commoditySelect =
-        document.getElementById(
-            "commoditySelect"
-        );
-
-    const forecastButton =
-        document.getElementById(
-            "loadForecastBtn"
-        );
-
-    const errorBox =
-        document.getElementById(
-            "marketError"
-        );
-
-
-    if (
-        !commoditySelect ||
-        !forecastButton
-    ) {
-        return;
-    }
-
-
-    commoditySelect.innerHTML = `
-        <option value="">
-            Loading commodities...
-        </option>
-    `;
-
-
-    commoditySelect.disabled = true;
-
-    forecastButton.disabled = true;
-
-
-    if (errorBox) {
-        errorBox.textContent = "";
-    }
-
-
-    if (!marketName) {
-
-        commoditySelect.innerHTML = `
-            <option value="">
-                Select commodity
-            </option>
-        `;
-
-        return;
-
-    }
-
-
-    try {
-
-        const url =
-            `/api/markets/${encodeURIComponent(
-                marketName
-            )}/commodities`;
-
-
-        const response =
-            await fetch(url);
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                `Failed to load commodities (${response.status})`
-            );
-
-        }
-
-
-        const data =
-            await response.json();
-
-
-        const commodities =
-            Array.isArray(data.commodities)
-                ? data.commodities
-                : [];
-
-
-        commoditySelect.innerHTML = `
-            <option value="">
-                Select commodity
-            </option>
-        `;
-
-
-        commodities.forEach(
-            function (commodity) {
-
-                const option =
-                    document.createElement(
-                        "option"
-                    );
-
-
-                option.value =
-                    commodity;
-
-
-                option.textContent =
-                    commodity;
-
-
-                commoditySelect.appendChild(
-                    option
-                );
-
-            }
-        );
-
-
-        commoditySelect.disabled =
-            commodities.length === 0;
-
-
-        if (!commodities.length) {
-
-            if (errorBox) {
-
-                errorBox.textContent =
-                    "No commodities available for this market.";
-
-            }
-
-        }
-
-
-    } catch (error) {
-
-        console.error(
-            "Commodity loading error:",
-            error
-        );
-
-
-        commoditySelect.innerHTML = `
-            <option value="">
-                Unable to load commodities
-            </option>
-        `;
-
-
-        if (errorBox) {
-
-            errorBox.textContent =
-                error.message;
-
-        }
-
-    }
-
-}
-
-
-function resetForecastDisplay() {
-
-    const currentPrice =
-        document.getElementById(
-            "currentPrice"
-        );
-
-    const reportDate =
-        document.getElementById(
-            "reportDate"
-        );
-
-    const day7Price =
-        document.getElementById(
-            "day7Price"
-        );
-
-    const day7Date =
-        document.getElementById(
-            "day7Date"
-        );
-
-    const change7d =
-        document.getElementById(
-            "change7d"
-        );
-
-    const recommendation =
-        document.getElementById(
-            "recommendation"
-        );
-
-    const forecastTable =
-        document.getElementById(
-            "forecastTable"
-        );
-
-
-    if (currentPrice) {
-        currentPrice.textContent = "—";
-    }
-
-    if (reportDate) {
-        reportDate.textContent = "—";
-    }
-
-    if (day7Price) {
-        day7Price.textContent = "—";
-    }
-
-    if (day7Date) {
-        day7Date.textContent = "—";
-    }
-
-    if (change7d) {
-        change7d.textContent = "—";
-    }
-
-    if (recommendation) {
-        recommendation.textContent = "—";
-    }
-
-
-    if (forecastTable) {
-
-        forecastTable.innerHTML = `
-
-            <tr>
-                <th>Day</th>
-                <th>Date</th>
-                <th>Predicted Price</th>
-            </tr>
-
-            <tr>
-                <td colspan="3">
-                    No forecast loaded.
-                </td>
-            </tr>
-
-        `;
-
-    }
-
-
-    const summary =
-        document.getElementById(
-            "dashForecastSummary"
-        );
-
-
-    if (summary) {
-
-        summary.textContent =
-            "Select a market and commodity in Market Prices.";
-
-        summary.classList.add("empty");
-
-    }
-
-}
-
-
-async function loadForecast() {
-
-    const marketSelect =
-        document.getElementById(
-            "marketSelect"
-        );
-
-    const commoditySelect =
-        document.getElementById(
-            "commoditySelect"
-        );
-
-    const errorBox =
-        document.getElementById(
-            "marketError"
-        );
-
-    const market =
-        marketSelect
-            ? marketSelect.value
-            : "";
-
-    const commodity =
-        commoditySelect
-            ? commoditySelect.value
-            : "";
-
-
-    if (!market || !commodity) {
-
-        if (errorBox) {
-
-            errorBox.textContent =
-                "Please select both market and commodity.";
-
-        }
-
-        return;
-
-    }
-
-
-    if (errorBox) {
-        errorBox.textContent = "";
-    }
-
-
-    resetForecastDisplay();
-
-
-    const button =
-        document.getElementById(
-            "loadForecastBtn"
-        );
-
-
-    if (button) {
-
-        button.disabled = true;
-
-        button.textContent =
-            "Loading...";
-
-    }
-
-
-    try {
-
-        const url =
-            `/api/forecast/?market=${encodeURIComponent(
-                market
-            )}&commodity=${encodeURIComponent(
-                commodity
-            )}`;
-
-
-        const response =
-            await fetch(url);
-
-
-        const data =
-            await response.json();
-
-
-        if (!response.ok) {
-
-            throw new Error(
-                data.error ||
-                "Failed to generate forecast."
-            );
-
-        }
-
-
-        /* -------------------------------------
-           CURRENT PRICE
-           ------------------------------------- */
-
-        const currentPrice =
-            document.getElementById(
-                "currentPrice"
-            );
-
-
-        const reportDate =
-            document.getElementById(
-                "reportDate"
-            );
-
-
-        if (currentPrice) {
-
-            currentPrice.textContent =
-                `₹${Number(
-                    data.current_price
-                ).toLocaleString(
-                    "en-IN",
-                    {
-                        maximumFractionDigits: 2
-                    }
-                )}`;
-
-        }
-
-
-        if (reportDate) {
-
-            reportDate.textContent =
-                `Report date: ${
-                    data.report_date
-                }`;
-
-        }
-
-
-        /* -------------------------------------
-           DAY 7
-           ------------------------------------- */
-
-        const day7 =
-            data.forecast &&
-            data.forecast.day_7;
-
-
-        const day7Price =
-            document.getElementById(
-                "day7Price"
-            );
-
-
-        const day7Date =
-            document.getElementById(
-                "day7Date"
-            );
-
-
-        if (day7) {
-
-            if (day7Price) {
-
-                day7Price.textContent =
-                    `₹${Number(
-                        day7.price
-                    ).toLocaleString(
-                        "en-IN",
-                        {
-                            maximumFractionDigits: 2
+                                    </div>
+                                  `
                         }
-                    )}`;
 
-            }
-
-
-            if (day7Date) {
-
-                day7Date.textContent =
-                    `For ${day7.date}`;
-
-            }
-
-        }
-
-
-        /* -------------------------------------
-           CHANGE
-           ------------------------------------- */
-
-        const change7d =
-            document.getElementById(
-                "change7d"
-            );
-
-
-        if (change7d) {
-
-            const change =
-                Number(
-                    data.predicted_change_7d_pct
-                );
-
-
-            const sign =
-                change > 0
-                    ? "+"
-                    : "";
-
-
-            change7d.textContent =
-                `${sign}${change.toFixed(2)}%`;
-
-
-            change7d.classList.remove(
-                "change-up",
-                "change-down"
-            );
-
-
-            if (change > 0) {
-
-                change7d.classList.add(
-                    "change-up"
-                );
-
-            } else if (change < 0) {
-
-                change7d.classList.add(
-                    "change-down"
-                );
-
-            }
-
-        }
-
-
-        /* -------------------------------------
-           RECOMMENDATION
-           ------------------------------------- */
-
-        const recommendation =
-            document.getElementById(
-                "recommendation"
-            );
-
-
-        if (recommendation) {
-
-            recommendation.textContent =
-                data.recommendation ||
-                "NO STRONG SIGNAL";
-
-        }
-
-
-        /* -------------------------------------
-           7-DAY FORECAST TABLE
-           ------------------------------------- */
-
-        const forecastTable =
-            document.getElementById(
-                "forecastTable"
-            );
-
-
-        if (forecastTable) {
-
-            forecastTable.innerHTML = `
-
-                <tr>
-
-                    <th>
-                        Day
-                    </th>
-
-                    <th>
-                        Date
-                    </th>
-
-                    <th>
-                        Predicted Price
-                    </th>
-
-                </tr>
-
-            `;
-
-
-            for (
-                let day = 1;
-                day <= 7;
-                day++
-            ) {
-
-                const key =
-                    `day_${day}`;
-
-
-                const forecast =
-                    data.forecast &&
-                    data.forecast[key];
-
-
-                if (!forecast) {
-                    continue;
-                }
-
-
-                const row =
-                    document.createElement(
-                        "tr"
-                    );
-
-
-                row.innerHTML = `
-
-                    <td>
-                        Day ${day}
-                    </td>
-
-                    <td>
-                        ${forecast.date}
-                    </td>
-
-                    <td>
-                        ₹${Number(
-                            forecast.price
-                        ).toLocaleString(
-                            "en-IN",
-                            {
-                                maximumFractionDigits: 2
-                            }
-                        )}
-                    </td>
-
+                    </div>
                 `;
-
-
-                forecastTable.appendChild(
-                    row
-                );
-
-            }
-
-        }
-
-
-        /* -------------------------------------
-           DASHBOARD FORECAST SUMMARY
-           ------------------------------------- */
-
-        const summary =
-            document.getElementById(
-                "dashForecastSummary"
-            );
-
-
-        if (summary) {
-
-            summary.classList.remove(
-                "empty"
-            );
-
-
-            summary.innerHTML = `
-
-                <strong>
-                    ${commodity}
-                </strong>
-                at
-                <strong>
-                    ${market}
-                </strong>
-
-                <br>
-
-                Current:
-                <strong>
-                    ₹${Number(
-                        data.current_price
-                    ).toLocaleString(
-                        "en-IN",
-                        {
-                            maximumFractionDigits: 2
-                        }
-                    )}
-                </strong>
-
-                →
-
-                Day 7:
-                <strong>
-                    ₹${Number(
-                        day7.price
-                    ).toLocaleString(
-                        "en-IN",
-                        {
-                            maximumFractionDigits: 2
-                        }
-                    )}
-                </strong>
-
-                <br>
-
-                <strong>
-                    ${data.predicted_change_7d_pct}%
-                </strong>
-
-                ·
-
-                <strong>
-                    ${data.recommendation}
-                </strong>
-
-            `;
-
-        }
-
-
-    } catch (error) {
-
-        console.error(
-            "Forecast error:",
-            error
-        );
-
-
-        if (errorBox) {
-
-            errorBox.textContent =
-                error.message;
-
-        }
-
-    } finally {
-
-        if (button) {
-
-            button.disabled =
-                !(
-                    marketSelect &&
-                    commoditySelect &&
-                    marketSelect.value &&
-                    commoditySelect.value
-                );
-
-            button.textContent =
-                "Get Forecast";
-
-        }
-
-    }
-
-}
-
-
-function initializeMarketForecast() {
-
-    const marketSelect =
-        document.getElementById(
-            "marketSelect"
-        );
-
-    const commoditySelect =
-        document.getElementById(
-            "commoditySelect"
-        );
-
-    const forecastButton =
-        document.getElementById(
-            "loadForecastBtn"
-        );
-
-
-    if (
-        !marketSelect ||
-        !commoditySelect ||
-        !forecastButton
-    ) {
-        return;
-    }
-
-
-    marketSelect.addEventListener(
-        "change",
-        async function () {
-
-            resetForecastDisplay();
-
-            await loadCommodities(
-                marketSelect.value
-            );
-
-        }
-    );
-
-
-    commoditySelect.addEventListener(
-        "change",
-        function () {
-
-            forecastButton.disabled =
-                !(
-                    marketSelect.value &&
-                    commoditySelect.value
-                );
-
-        }
-    );
-
-
-    forecastButton.addEventListener(
-        "click",
-        loadForecast
-    );
-
-
-    loadMarkets();
-
-}
-
-    /* =========================================
-       BUYERS
-       ========================================= */
-
-    function renderBuyers() {
-
-        const buyerGrid =
-            document.getElementById(
-                "buyerGrid"
-            );
-
-
-        if (!buyerGrid) {
-            return;
-        }
-
-
-        if (!state.buyers.length) {
-
-            buyerGrid.innerHTML = `
-
-                <div class="empty">
-
-                    Buyer marketplace will appear
-                    after the buyer module is connected.
-
-                </div>
-
-            `;
-
-            return;
-
-        }
-
-
-        buyerGrid.innerHTML =
-            state.buyers
-                .map(function (buyer) {
-
-                    return `
-
-                        <div class="crop-tile">
-
-                            <div class="ct-top">
-
-                                <span class="crop-badge">
-
-                                    ${
-                                        buyer.name
-                                            .charAt(0)
-                                            .toUpperCase()
-                                    }
-
-                                </span>
-
-
-                                <span
-                                    class="
-                                        pill
-                                        pill-pending
-                                    "
-                                >
-                                    ★ ${buyer.rating}
-                                </span>
-
-                            </div>
-
-
-                            <div class="ct-name">
-                                ${buyer.name}
-                            </div>
-
-
-                            <div class="ct-row">
-
-                                <span>
-                                    Location
-                                </span>
-
-                                <span>
-                                    ${buyer.loc}
-                                </span>
-
-                            </div>
-
-
-                            <div class="ct-row">
-
-                                <span>
-                                    Buys
-                                </span>
-
-                                <span>
-                                    ${buyer.deals}
-                                </span>
-
-                            </div>
-
-
-                            <div class="ct-actions">
-
-                                <button
-                                    class="
-                                        btn
-                                        btn-primary
-                                        btn-sm
-                                    "
-                                    data-contact="${buyer.name}"
-                                >
-                                    Contact
-                                </button>
-
-                            </div>
-
-                        </div>
-
-                    `;
-
-                })
-                .join("");
-
-
-        document
-            .querySelectorAll(
-                "[data-contact]"
-            )
-            .forEach(function (button) {
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        toast(
-                            `Buyer contact will be connected through the matching module.`
-                        );
-
-                    }
-                );
-
-            });
-
-    }
-
-
-    /* =========================================
-       FULL REQUESTS
-       ========================================= */
-
-    function renderFullRequests() {
-
-        const fullRequests =
-            document.getElementById(
-                "fullRequests"
-            );
-
-
-        if (!fullRequests) {
-            return;
-        }
-
-
-        fullRequests.innerHTML =
-            renderReqList(
-                state.requests
-            );
-
-
-        bindReqButtons();
-
-    }
-
-
-    /* =========================================
-       ORDERS
-       ========================================= */
-
-    function renderOrders() {
-
-        const ordersTable =
-            document.getElementById(
-                "ordersTbl"
-            );
-
-
-        if (!ordersTable) {
-            return;
-        }
-
-
-        if (!state.orders.length) {
-
-            ordersTable.innerHTML = `
-
-                <tr>
-
-                    <td
-                        colspan="7"
-                        class="empty"
-                    >
-
-                        Orders will appear here
-                        after the offer/transaction
-                        workflow is implemented.
-
-                    </td>
-
-                </tr>
-
-            `;
-
-            return;
-
-        }
-
-
-        ordersTable.innerHTML = `
-
-            <tr>
-
-                <th>
-                    Order ID
-                </th>
-
-                <th>
-                    Crop
-                </th>
-
-                <th>
-                    Buyer
-                </th>
-
-                <th>
-                    Qty
-                </th>
-
-                <th>
-                    Amount
-                </th>
-
-                <th>
-                    Status
-                </th>
-
-                <th>
-                    Date
-                </th>
-
-            </tr>
-
-
-            ${
-                state.orders
-                    .map(function (order) {
-
-                        return `
-
-                            <tr>
-
-                                <td>
-                                    ${order.id}
-                                </td>
-
-                                <td>
-                                    ${order.crop}
-                                </td>
-
-                                <td>
-                                    ${order.buyer}
-                                </td>
-
-                                <td>
-                                    ${order.qty}
-                                </td>
-
-                                <td>
-                                    ${order.amount}
-                                </td>
-
-                                <td
-                                    class="${
-                                        order.status ===
-                                        "Delivered"
-                                            ? "change-up"
-                                            : ""
-                                    }"
-                                >
-                                    ${order.status}
-                                </td>
-
-                                <td>
-                                    ${order.date}
-                                </td>
-
-                            </tr>
-
-                        `;
-
-                    })
-                    .join("")
-            }
-
-        `;
-
+            }).join("");
     }
 
 
     /* =========================================
        PROFILE
-       ========================================= */
+    ========================================= */
 
     function renderProfile() {
+        if (!$("profileView")) return;
 
-        const profileView =
-            document.getElementById(
-                "profileView"
-            );
+        const location =
+            [
+                farmer.city,
+                farmer.state
+            ]
+                .filter(Boolean)
+                .join(", ") ||
+            "Not set";
 
+        const initialsText =
+            initials(farmer.full_name);
 
-        if (!profileView) {
-            return;
-        }
-
-
-        const farmer =
-            state.farmer;
-
-
-        const initials =
-            farmer.name
-                .trim()
-                .split(/\s+/)
-                .map(function (word) {
-                    return word[0];
-                })
-                .slice(0, 2)
-                .join("");
-
-
-        profileView.innerHTML = `
+        $("profileView").innerHTML = `
 
             <div class="p-av">
-                ${initials}
+                ${escapeHtml(initialsText)}
             </div>
 
 
             <div class="p-row">
-
+                <span>Name</span>
                 <span>
-                    Name
+                    ${escapeHtml(
+                        farmer.full_name || "—"
+                    )}
                 </span>
-
-                <span>
-                    ${farmer.name}
-                </span>
-
             </div>
 
 
             <div class="p-row">
-
+                <span>Email</span>
                 <span>
-                    Village / District
+                    ${escapeHtml(
+                        farmer.email || "—"
+                    )}
                 </span>
-
-                <span>
-                    ${farmer.village}
-                </span>
-
             </div>
 
 
             <div class="p-row">
-
+                <span>Village / District</span>
                 <span>
-                    Phone
+                    ${escapeHtml(location)}
                 </span>
-
-                <span>
-                    ${farmer.phone || "Not provided"}
-                </span>
-
             </div>
 
 
             <div class="p-row">
-
+                <span>Phone</span>
                 <span>
-                    Crops grown
+                    ${escapeHtml(
+                        farmer.phone || "—"
+                    )}
                 </span>
-
-                <span>
-                    ${farmer.crops || "Not set"}
-                </span>
-
             </div>
 
 
             <div class="p-row">
-
+                <span>Crops grown</span>
                 <span>
-                    Land size
+                    ${escapeHtml(
+                        farmer.crops ||
+                        "Not set"
+                    )}
                 </span>
-
-                <span>
-                    ${
-                        farmer.land || "Not set"
-                    }
-                </span>
-
             </div>
 
 
             <div class="p-row">
-
+                <span>Land size</span>
                 <span>
-                    Member since
+                    ${escapeHtml(
+                        String(
+                            farmer.land_size ||
+                            "Not set"
+                        )
+                    )}
                 </span>
-
-                <span>
-                    ${farmer.since}
-                </span>
-
             </div>
 
 
-            <div
-                style="margin-top:20px;"
-            >
+            <div class="p-row">
+                <span>Member since</span>
+                <span>
+                    ${escapeHtml(
+                        String(
+                            farmer.created_at ||
+                            "—"
+                        )
+                    )}
+                </span>
+            </div>
+
+
+            <div style="margin-top:20px;">
 
                 <button
                     class="btn btn-primary"
@@ -2801,58 +675,40 @@ function initializeMarketForecast() {
                 </button>
 
             </div>
-
         `;
 
 
-        profileView
-            .querySelectorAll(
-                "[data-nav]"
-            )
-            .forEach(function (element) {
-
-                element.addEventListener(
-                    "click",
-                    function () {
-
-                        activeGroup =
-                            "profile";
-
-
-                        goTo(
-                            "edit-profile"
-                        );
-
-                    }
+        const editButton =
+            $("profileView")
+                .querySelector(
+                    "[data-nav]"
                 );
 
-            });
+        if (editButton) {
 
+            editButton.addEventListener(
+                "click",
+                () => {
+                    goTo("edit-profile");
+                }
+            );
+
+        }
     }
 
 
-    /* =========================================
-       EDIT PROFILE
-       ========================================= */
-
     function renderEditProfile() {
+        if (!$("profileEdit")) return;
 
-        const profileEdit =
-            document.getElementById(
-                "profileEdit"
-            );
+        const location =
+            [
+                farmer.city,
+                farmer.state
+            ]
+                .filter(Boolean)
+                .join(", ");
 
-
-        if (!profileEdit) {
-            return;
-        }
-
-
-        const farmer =
-            state.farmer;
-
-
-        profileEdit.innerHTML = `
+        $("profileEdit").innerHTML = `
 
             <div class="field">
 
@@ -2861,8 +717,10 @@ function initializeMarketForecast() {
                 </label>
 
                 <input
-                    id="pfName"
-                    value="${farmer.name}"
+                    value="${escapeHtml(
+                        farmer.full_name || ""
+                    )}"
+                    disabled
                 >
 
             </div>
@@ -2875,8 +733,10 @@ function initializeMarketForecast() {
                 </label>
 
                 <input
-                    id="pfVillage"
-                    value="${farmer.village}"
+                    value="${escapeHtml(
+                        location
+                    )}"
+                    disabled
                 >
 
             </div>
@@ -2889,8 +749,10 @@ function initializeMarketForecast() {
                 </label>
 
                 <input
-                    id="pfPhone"
-                    value="${farmer.phone}"
+                    value="${escapeHtml(
+                        farmer.phone || ""
+                    )}"
+                    disabled
                 >
 
             </div>
@@ -2899,231 +761,702 @@ function initializeMarketForecast() {
             <div class="field">
 
                 <label>
-                    Crops grown
+                    Email
                 </label>
 
                 <input
-                    id="pfCrops"
-                    value="${farmer.crops}"
-                >
-
-            </div>
-
-
-            <div class="field">
-
-                <label>
-                    Land size
-                </label>
-
-                <input
-                    id="pfLand"
-                    value="${farmer.land}"
+                    value="${escapeHtml(
+                        farmer.email || ""
+                    )}"
+                    disabled
                 >
 
             </div>
 
 
             <div
-                class="modal-actions"
-                style="
-                    justify-content:flex-start;
-                "
+                class="empty"
+                style="padding:20px 0 0;"
             >
 
-                <button
-                    class="btn btn-primary"
-                    id="pfSave"
-                >
-                    Save changes
-                </button>
+                Profile editing will be added
+                with the backend profile-update route.
+
+            </div>
+        `;
+    }
 
 
-                <button
-                    class="btn btn-outline"
-                    id="pfCancel"
-                >
-                    Cancel
-                </button>
+    /* =========================================
+       MARKET API
+    ========================================= */
+
+    async function loadMarkets() {
+
+        const marketSelect =
+            $("marketSelect");
+
+        if (!marketSelect) return;
+
+        marketSelect.innerHTML =
+            `<option value="">
+                Loading markets...
+            </option>`;
+
+
+        try {
+
+            const response =
+                await fetch(
+                    "/api/markets/"
+                );
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.error ||
+                    "Failed to load markets"
+                );
+
+            }
+
+
+            marketSelect.innerHTML =
+                `<option value="">
+                    Select market
+                </option>`;
+
+
+            data.markets.forEach(
+                (market) => {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+                    option.value = market;
+                    option.textContent = market;
+
+                    marketSelect.appendChild(
+                        option
+                    );
+
+                }
+            );
+
+        } catch (error) {
+
+            marketSelect.innerHTML =
+                `<option value="">
+                    Unable to load markets
+                </option>`;
+
+            if ($("marketError")) {
+                $("marketError").textContent =
+                    error.message;
+            }
+
+        }
+    }
+
+
+    async function loadCommodities() {
+
+        const market =
+            $("marketSelect").value;
+
+        const commoditySelect =
+            $("commoditySelect");
+
+        const button =
+            $("loadForecastBtn");
+
+
+        commoditySelect.disabled = true;
+        button.disabled = true;
+
+
+        commoditySelect.innerHTML =
+            `<option value="">
+                Loading commodities...
+            </option>`;
+
+
+        $("marketError").textContent = "";
+
+
+        if (!market) {
+
+            commoditySelect.innerHTML =
+                `<option value="">
+                    Select market first
+                </option>`;
+
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/markets/${encodeURIComponent(
+                        market
+                    )}/commodities`
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.error ||
+                    "Failed to load commodities"
+                );
+
+            }
+
+
+            commoditySelect.innerHTML =
+                `<option value="">
+                    Select commodity
+                </option>`;
+
+
+            data.commodities.forEach(
+                (commodity) => {
+
+                    const option =
+                        document.createElement(
+                            "option"
+                        );
+
+                    option.value =
+                        commodity;
+
+                    option.textContent =
+                        commodity;
+
+                    commoditySelect.appendChild(
+                        option
+                    );
+
+                }
+            );
+
+
+            commoditySelect.disabled = false;
+
+        } catch (error) {
+
+            commoditySelect.innerHTML =
+                `<option value="">
+                    Unable to load commodities
+                </option>`;
+
+            $("marketError").textContent =
+                error.message;
+
+        }
+    }
+
+
+    function updateForecastButton() {
+
+        $("loadForecastBtn").disabled =
+            !(
+                $("marketSelect").value &&
+                $("commoditySelect").value
+            );
+    }
+
+
+    async function loadForecast() {
+
+        const market =
+            $("marketSelect").value;
+
+        const commodity =
+            $("commoditySelect").value;
+
+        const button =
+            $("loadForecastBtn");
+
+
+        if (!market || !commodity) {
+            return;
+        }
+
+
+        button.disabled = true;
+        button.textContent = "Loading...";
+
+        $("marketError").textContent = "";
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `/api/forecast/?market=${encodeURIComponent(
+                        market
+                    )}&commodity=${encodeURIComponent(
+                        commodity
+                    )}`
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.error ||
+                    "Failed to generate forecast"
+                );
+
+            }
+
+
+            renderForecast(data);
+
+        } catch (error) {
+
+            $("marketError").textContent =
+                error.message;
+
+        } finally {
+
+            button.textContent =
+                "Get Forecast";
+
+            updateForecastButton();
+
+        }
+    }
+
+
+    /* =========================================
+       FORECAST
+    ========================================= */
+
+    function renderForecast(data) {
+
+        const current =
+            Number(
+                data.current_price
+            );
+
+        const day7 =
+            Number(
+                data.forecast.day_7.price
+            );
+
+        const change =
+            Number(
+                data.predicted_change_7d_pct
+            );
+
+
+        $("currentPrice").textContent =
+            formatMoney(current);
+
+        $("reportDate").textContent =
+            `Latest report: ${data.report_date}`;
+
+        $("day7Price").textContent =
+            formatMoney(day7);
+
+        $("day7Date").textContent =
+            data.forecast.day_7.date;
+
+        $("change7d").textContent =
+            `${
+                change >= 0 ? "+" : ""
+            }${change.toFixed(2)}%`;
+
+        $("recommendation").textContent =
+            data.recommendation;
+
+
+        $("change7d").style.color =
+            change > 0
+                ? "var(--positive)"
+                : change < 0
+                    ? "var(--negative)"
+                    : "var(--ink)";
+
+
+        $("recommendation").style.color =
+            data.recommendation === "SELL"
+
+                ? "var(--negative)"
+
+                : data.recommendation === "HOLD"
+
+                    ? "var(--positive)"
+
+                    : "var(--forest)";
+
+
+        $("dashForecastSummary").innerHTML = `
+
+            <div class="price-row">
+
+                <div>
+
+                    <div class="price-crop">
+                        ${escapeHtml(
+                            data.commodity
+                        )}
+                    </div>
+
+                    <div class="price-market">
+                        ${escapeHtml(
+                            data.market
+                        )}
+                    </div>
+
+                </div>
+
+
+                <div class="price-right">
+
+                    <div class="price-val">
+                        ${formatMoney(day7)}
+                    </div>
+
+
+                    <div
+                        class="${
+                            change >= 0
+                                ? "change-up"
+                                : "change-down"
+                        }"
+                    >
+
+                        ${
+                            change >= 0
+                                ? "▲"
+                                : "▼"
+                        }
+
+                        ${Math.abs(
+                            change
+                        ).toFixed(2)}%
+
+                        in 7 days
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="empty"
+                style="padding:18px 0 0;"
+            >
+
+                Recommendation:
+
+                <strong>
+                    ${escapeHtml(
+                        data.recommendation
+                    )}
+                </strong>
 
             </div>
 
         `;
 
 
-        const saveButton =
-            document.getElementById(
-                "pfSave"
-            );
+        $("forecastTable").innerHTML = `
 
+            <tr>
+                <th>Day</th>
+                <th>Date</th>
+                <th>Predicted Price</th>
+            </tr>
 
-        if (saveButton) {
+            ${
+                Object.entries(
+                    data.forecast
+                )
+                    .map(
+                        ([day, value]) => `
+                            <tr>
 
-            saveButton.addEventListener(
-                "click",
-                function () {
+                                <td>
+                                    ${escapeHtml(
+                                        day.replace(
+                                            "day_",
+                                            "Day "
+                                        )
+                                    )}
+                                </td>
 
-                    farmer.name =
-                        document.getElementById(
-                            "pfName"
-                        ).value.trim()
-                        || farmer.name;
+                                <td>
+                                    ${escapeHtml(
+                                        value.date
+                                    )}
+                                </td>
 
+                                <td>
+                                    ${formatMoney(
+                                        value.price
+                                    )}
+                                </td>
 
-                    farmer.village =
-                        document.getElementById(
-                            "pfVillage"
-                        ).value.trim()
-                        || farmer.village;
-
-
-                    farmer.phone =
-                        document.getElementById(
-                            "pfPhone"
-                        ).value.trim()
-                        || farmer.phone;
-
-
-                    farmer.crops =
-                        document.getElementById(
-                            "pfCrops"
-                        ).value.trim()
-                        || farmer.crops;
-
-
-                    farmer.land =
-                        document.getElementById(
-                            "pfLand"
-                        ).value.trim()
-                        || farmer.land;
-
-
-                    /*
-                     * This is still local-only.
-                     *
-                     * We will connect it to a real
-                     * Flask profile update route later.
-                     */
-                    toast(
-                        "Profile updated locally."
-                    );
-
-
-                    activeGroup =
-                        "profile";
-
-
-                    goTo(
-                        "profile"
-                    );
-
-
-                    renderAll();
-
-                }
-            );
-
-        }
-
-
-        const cancelButton =
-            document.getElementById(
-                "pfCancel"
-            );
-
-
-        if (cancelButton) {
-
-            cancelButton.addEventListener(
-                "click",
-                function () {
-
-                    activeGroup =
-                        "profile";
-
-
-                    goTo(
-                        "profile"
-                    );
-
-                }
-            );
-
-        }
-
-    }
-
-
-    /* =========================================
-       RENDER EVERYTHING
-       ========================================= */
-
-    function renderAll() {
-
-    renderDashboard();
-
-    const searchInput =
-        document.getElementById(
-            "cropSearch"
-        );
-
-    renderCrops(
-        searchInput
-            ? searchInput.value
-            : ""
-    );
-
-    renderBuyers();
-
-    renderFullRequests();
-
-    renderOrders();
-
-    renderProfile();
-
-    renderEditProfile();
-}
-
-
-    /* =========================================
-       MOBILE MENU
-       ========================================= */
-
-    const menuToggle =
-        document.getElementById(
-            "menuToggle"
-        );
-
-
-    if (menuToggle) {
-
-        menuToggle.addEventListener(
-            "click",
-            function () {
-
-                const sidebar =
-                    document.querySelector(
-                        ".sidebar"
-                    );
-
-
-                if (sidebar) {
-
-                    sidebar.classList.toggle(
-                        "collapsed"
-                    );
-
-                }
-
+                            </tr>
+                        `
+                    )
+                    .join("")
             }
-        );
+
+        `;
+    }
+
+
+    /* =========================================
+       CROP MODAL
+    ========================================= */
+
+    function openCropModal() {
+
+        $("cropOverlay")
+            .classList
+            .add("active");
 
     }
 
 
-       renderAll();
-       
-       renderNav();
-       initializeMarketForecast();
+    function closeCropModal() {
+
+        $("cropOverlay")
+            .classList
+            .remove("active");
+
+    }
+
+
+    /* =========================================
+       HTML ESCAPING
+    ========================================= */
+
+    function escapeHtml(value) {
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+        div.textContent =
+            String(value ?? "");
+
+        return div.innerHTML;
+    }
+
+
+    /* =========================================
+       INITIALIZE
+    ========================================= */
+
+    function init() {
+
+        renderHeader();
+
+        renderDashboardStats();
+
+        renderDashboardCrops();
+
+        renderCrops();
+
+        renderProfile();
+
+        renderEditProfile();
+
+        renderNav();
+
+        bindNavigation();
+
+
+        /* Crop search */
+
+        if ($("cropSearch")) {
+
+            $("cropSearch")
+                .addEventListener(
+                    "input",
+                    (event) => {
+                        renderCrops(
+                            event.target.value
+                        );
+                    }
+                );
+
+        }
+
+
+        /* Add crop buttons */
+
+        if ($("openAddCrop")) {
+            $("openAddCrop")
+                .addEventListener(
+                    "click",
+                    openCropModal
+                );
+        }
+
+
+        if ($("openAddCrop2")) {
+            $("openAddCrop2")
+                .addEventListener(
+                    "click",
+                    openCropModal
+                );
+        }
+
+
+        /* Cancel crop */
+
+        if ($("cancelCrop")) {
+
+            $("cancelCrop")
+                .addEventListener(
+                    "click",
+                    closeCropModal
+                );
+
+        }
+
+
+        /* Close modal by clicking overlay */
+
+        if ($("cropOverlay")) {
+
+            $("cropOverlay")
+                .addEventListener(
+                    "click",
+                    (event) => {
+
+                        if (
+                            event.target.id ===
+                            "cropOverlay"
+                        ) {
+
+                            closeCropModal();
+
+                        }
+
+                    }
+                );
+
+        }
+
+
+        /* Logout */
+
+        if ($("logoutBtn")) {
+
+            $("logoutBtn")
+                .addEventListener(
+                    "click",
+                    () => {
+                        window.location.href =
+                            "/dashboard/logout";
+                    }
+                );
+
+        }
+
+
+        /* Market */
+
+        if ($("marketSelect")) {
+
+            $("marketSelect")
+                .addEventListener(
+                    "change",
+                    loadCommodities
+                );
+
+        }
+
+
+        if ($("commoditySelect")) {
+
+            $("commoditySelect")
+                .addEventListener(
+                    "change",
+                    updateForecastButton
+                );
+
+        }
+
+
+        if ($("loadForecastBtn")) {
+
+            $("loadForecastBtn")
+                .addEventListener(
+                    "click",
+                    loadForecast
+                );
+
+        }
+
+
+        /* Mobile menu */
+
+        if ($("menuToggle")) {
+
+            $("menuToggle")
+                .addEventListener(
+                    "click",
+                    () => {
+
+                        $("menuToggle")
+                            .classList
+                            .toggle("active");
+
+                        const sidebar =
+                            document.querySelector(
+                                ".sidebar"
+                            );
+
+                        if (sidebar) {
+
+                            sidebar
+                                .classList
+                                .toggle(
+                                    "collapsed"
+                                );
+
+                        }
+
+                    }
+                );
+
+        }
+
+
+        /* Load markets */
+
+        loadMarkets();
+    }
+
+
+    init();
 
 })();

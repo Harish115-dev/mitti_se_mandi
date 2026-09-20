@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Buyer Dashboard - Mitti Se Mandi</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/buyer_dashboard.css') }}"
+    >
+</head>
+
+<body>
+
+<div class="dashboard">
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <img
+                src="{{ url_for('static', filename='images/logo.png') }}"
+                alt="Mitti Se Mandi"
+            >
+
+            <div>
+                <h2>Mitti Se Mandi</h2>
+                <span>Buyer Portal</span>
+            </div>
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <a href="#overview" class="nav-link active">
+                Dashboard
+            </a>
+
+            <a href="#matches" class="nav-link">
+                Farmer Matches
+            </a>
+
+            <a href="#requirements" class="nav-link">
+                My Requirements
+            </a>
+
+            <a href="#add-requirement" class="nav-link">
+                Add Requirement
+            </a>
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="sidebar-user">
+
+                <span class="avatar">
+                    {{ buyer.full_name[0] | upper }}
+                </span>
+
+                <div>
+                    <strong>{{ buyer.full_name }}</strong>
+                    <small>Buyer</small>
+                </div>
+
+            </div>
+
+            <a
+                href="{{ url_for('dashboard.logout') }}"
+                class="logout-btn"
+            >
+                Logout
+            </a>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- ================= MAIN ================= -->
+    <main class="main-content">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+
+            <div>
+                <span class="eyebrow">
+                    BUYER PORTAL
+                </span>
+
+                <h1>
+                    Welcome, {{ buyer.full_name }}
+                </h1>
+
+                <p>
+                    Manage purchasing demand and connect with suitable farmer listings.
+                </p>
+            </div>
+
+
+            <div class="account-box">
+
+                <span class="avatar">
+                    {{ buyer.full_name[0] | upper }}
+                </span>
+
+                <div>
+                    <strong>{{ buyer.full_name }}</strong>
+                    <small>{{ buyer.email }}</small>
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- HERO -->
+        <section
+            id="overview"
+            class="hero-panel"
+        >
+
+            <div>
+
+                <span class="hero-label">
+                    MARKETPLACE
+                </span>
+
+                <h2>
+                    Source produce smarter.
+                </h2>
+
+                <p>
+                    Create a requirement, compare farmer listings,
+                    and send an offer directly to the farmer.
+                </p>
+
+            </div>
+
+
+            <div class="hero-actions">
+
+                <a
+                    href="#add-requirement"
+                    class="btn btn-primary"
+                >
+                    + Add Requirement
+                </a>
+
+                <a
+                    href="#matches"
+                    class="btn btn-light"
+                >
+                    View Matches
+                </a>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- STATS -->
+        <section class="stats-grid">
+
+            <div class="stat-card">
+                <span>Requirements</span>
+                <strong>{{ requirements|length }}</strong>
+                <small>Total purchase demand</small>
+            </div>
+
+
+            <div class="stat-card">
+                <span>Active Demand</span>
+                <strong>{{ active_requirements }}</strong>
+                <small>Currently sourcing</small>
+            </div>
+
+
+            <div class="stat-card">
+                <span>Farmer Matches</span>
+                <strong>{{ matches|length }}</strong>
+                <small>Active marketplace listings</small>
+            </div>
+
+
+            <div class="stat-card">
+                <span>Account</span>
+
+                <strong class="status-value">
+                    {% if buyer.is_verified %}
+                        Verified
+                    {% else %}
+                        Pending
+                    {% endif %}
+                </strong>
+
+                <small>Buyer verification</small>
+            </div>
+
+        </section>
+
+
+
+        <!-- ACTIVE DEMAND + MATCH SUMMARY -->
+        <section class="overview-grid">
+
+            <!-- ACTIVE REQUIREMENT -->
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <span class="section-label">
+                            PURCHASE DEMAND
+                        </span>
+
+                        <h2>
+                            Active Requirements
+                        </h2>
+                    </div>
+
+                    <a href="#requirements">
+                        View all
+                    </a>
+
+                </div>
+
+
+                {% set active_list = requirements
+                    | selectattr("status", "equalto", "active")
+                    | list
+                %}
+
+
+                {% if active_list %}
+
+                    <div class="active-demand-list">
+
+                        {% for requirement in active_list[:4] %}
+
+                            <div class="demand-row">
+
+                                <div class="demand-icon">
+                                    {{ requirement.crop_name[0] | upper }}
+                                </div>
+
+
+                                <div class="demand-info">
+
+                                    <strong>
+                                        {{ requirement.crop_name }}
+
+                                        {% if requirement.variety %}
+                                            <span>
+                                                · {{ requirement.variety }}
+                                            </span>
+                                        {% endif %}
+                                    </strong>
+
+
+                                    <small>
+
+                                        {% if requirement.min_quantity is not none %}
+                                            {{ requirement.min_quantity }}
+                                        {% endif %}
+
+                                        {% if requirement.max_quantity is not none %}
+                                            – {{ requirement.max_quantity }}
+                                        {% endif %}
+
+                                        {{ requirement.quantity_unit }}
+
+                                        {% if requirement.max_price is not none %}
+                                            · Up to ₹{{ requirement.max_price }}
+                                        {% endif %}
+
+                                    </small>
+
+                                </div>
+
+
+                                <span class="status status-active">
+                                    Active
+                                </span>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-small">
+                        <strong>No active requirements</strong>
+                        <span>Create a requirement to start sourcing.</span>
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+
+            <!-- MATCH SUMMARY -->
+            <div class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <span class="section-label">
+                            MARKETPLACE
+                        </span>
+
+                        <h2>
+                            Match Overview
+                        </h2>
+                    </div>
+
+                    <a href="#matches">
+                        Open
+                    </a>
+
+                </div>
+
+
+                <div class="match-overview">
+
+                    <div class="match-number">
+                        {{ matches|length }}
+                    </div>
+
+                    <div>
+                        <strong>
+                            Available listings
+                        </strong>
+
+                        <small>
+                            Matching your active requirements
+                        </small>
+                    </div>
+
+                </div>
+
+
+                {% if matches %}
+
+                    <div class="mini-match-list">
+
+                        {% for match in matches[:3] %}
+
+                            <div class="mini-match">
+
+                                <div>
+                                    <strong>
+                                        {{ match.crop_name }}
+                                    </strong>
+
+                                    <small>
+                                        {{ match.farmer_name }}
+                                    </small>
+                                </div>
+
+
+                                <span
+                                    class="
+                                        match-pill
+
+                                        {% if match.match_status == 'Full Match' %}
+                                            full-match
+                                        {% elif match.match_status == 'Partial Match' %}
+                                            partial-match
+                                        {% else %}
+                                            low-match
+                                        {% endif %}
+                                    "
+                                >
+                                    {{ match.match_percentage }}%
+                                </span>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-small">
+                        <strong>No matches yet</strong>
+                        <span>Matches will appear here.</span>
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ================= FARMER MATCHES ================= -->
+        <section
+            id="matches"
+            class="section"
+        >
+
+            <div class="section-heading">
+
+                <div>
+                    <span class="section-label">
+                        MARKETPLACE
+                    </span>
+
+                    <h2>
+                        Farmer Matches
+                    </h2>
+
+                    <p>
+                        Compare available farmer listings before making an offer.
+                    </p>
+                </div>
+
+            </div>
+
+
+            {% if matches %}
+
+                <div class="matches-list">
+
+                    {% for match in matches %}
+
+                        <article class="match-card">
+
+                            <!-- Header -->
+                            <div class="match-head">
+
+                                <div class="match-farmer">
+
+                                    <span class="crop-badge">
+                                        {{ match.crop_name }}
+                                    </span>
+
+                                    <h3>
+                                        {{ match.farmer_name }}
+                                    </h3>
+
+                                    <small>
+                                        {{ match.location or match.farmer_city or "Location not specified" }}
+                                    </small>
+
+                                </div>
+
+
+                                <div class="match-score-box">
+
+                                    <strong>
+                                        {{ match.match_percentage }}%
+                                    </strong>
+
+                                    <span>
+                                        {{ match.match_status }}
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- Main facts -->
+                            <div class="match-facts">
+
+                                <div>
+                                    <span>Quantity</span>
+
+                                    <strong>
+                                        {{ match.quantity }}
+                                        {{ match.quantity_unit or "quintal" }}
+                                    </strong>
+                                </div>
+
+
+                                <div>
+                                    <span>Grade</span>
+
+                                    <strong>
+                                        {{ match.grade or "Any" }}
+                                    </strong>
+                                </div>
+
+
+                                <div>
+                                    <span>Asking Price</span>
+
+                                    <strong>
+                                        ₹{{ match.expected_price }}
+                                        /{{ match.quantity_unit or "quintal" }}
+                                    </strong>
+                                </div>
+
+
+                                <div>
+                                    <span>Market</span>
+
+                                    <strong>
+                                        {{ match.market_name or "—" }}
+                                    </strong>
+                                </div>
+
+                            </div>
+
+
+                            <!-- Match checks -->
+                            <div class="match-checks">
+
+                                {% for check in match.checks %}
+
+                                    <span
+                                        class="
+                                            check-tag
+                                            {% if check.passed %}
+                                                check-pass
+                                            {% else %}
+                                                check-fail
+                                            {% endif %}
+                                        "
+                                    >
+
+                                        {% if check.passed %}
+                                            ✓
+                                        {% else %}
+                                            ×
+                                        {% endif %}
+
+                                        {{ check.name }}
+
+                                    </span>
+
+                                {% endfor %}
+
+                            </div>
+
+
+                            <!-- Action -->
+                            <div class="match-footer">
+
+                                <div class="match-note">
+
+                                    {% if match.match_status == "Full Match" %}
+
+                                        Strong match across the selected criteria.
+
+                                    {% elif match.match_status == "Partial Match" %}
+
+                                        Some criteria do not match exactly, but you can still negotiate.
+
+                                    {% else %}
+
+                                        Limited match. Review the listing before making an offer.
+
+                                    {% endif %}
+
+                                </div>
+
+
+                                <a
+                                    href="{{ url_for(
+                                        'offers.create_offer',
+                                        listing_id=match.listing_id
+                                    ) }}"
+                                    class="btn btn-primary"
+                                >
+                                    Make Offer
+                                </a>
+
+                            </div>
+
+                        </article>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">
+                        +
+                    </div>
+
+                    <h3>
+                        No farmer matches yet
+                    </h3>
+
+                    <p>
+                        Create an active requirement to discover available farmer listings.
+                    </p>
+
+                    <a
+                        href="#add-requirement"
+                        class="btn btn-primary"
+                    >
+                        Create Requirement
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
+
+        <!-- ================= REQUIREMENTS ================= -->
+        <section
+            id="requirements"
+            class="section"
+        >
+
+            <div class="section-heading">
+
+                <div>
+                    <span class="section-label">
+                        YOUR DEMAND
+                    </span>
+
+                    <h2>
+                        My Requirements
+                    </h2>
+
+                    <p>
+                        Manage your current purchase requirements.
+                    </p>
+                </div>
+
+
+                <a
+                    href="#add-requirement"
+                    class="btn btn-primary"
+                >
+                    + Add Requirement
+                </a>
+
+            </div>
+
+
+            {% if requirements %}
+
+                <div class="requirements-list">
+
+                    {% for requirement in requirements %}
+
+                        <article class="requirement-card">
+
+                            <div class="requirement-main">
+
+                                <div>
+
+                                    <span class="crop-badge">
+                                        {{ requirement.crop_name }}
+                                    </span>
+
+                                    <h3>
+
+                                        {{ requirement.crop_name }}
+
+                                        {% if requirement.variety %}
+                                            <span>
+                                                · {{ requirement.variety }}
+                                            </span>
+                                        {% endif %}
+
+                                    </h3>
+
+                                </div>
+
+
+                                <span
+                                    class="
+                                        status
+
+                                        {% if requirement.status == 'active' %}
+                                            status-active
+                                        {% else %}
+                                            status-closed
+                                        {% endif %}
+                                    "
+                                >
+                                    {{ requirement.status | title }}
+                                </span>
+
+                            </div>
+
+
+                            <div class="requirement-facts">
+
+                                <div>
+                                    <span>Quantity</span>
+
+                                    <strong>
+
+                                        {% if requirement.min_quantity is not none %}
+                                            {{ requirement.min_quantity }}
+                                        {% endif %}
+
+                                        {% if requirement.max_quantity is not none %}
+                                            – {{ requirement.max_quantity }}
+                                        {% endif %}
+
+                                        {{ requirement.quantity_unit }}
+
+                                    </strong>
+                                </div>
+
+
+                                <div>
+                                    <span>Grade</span>
+
+                                    <strong>
+                                        {{ requirement.required_grade or "Any" }}
+                                    </strong>
+                                </div>
+
+
+                                <div>
+                                    <span>Location</span>
+
+                                    <strong>
+                                        {{ requirement.preferred_location or "Any" }}
+                                    </strong>
+                                </div>
+
+
+                                <div>
+                                    <span>Maximum Price</span>
+
+                                    <strong>
+
+                                        {% if requirement.max_price is not none %}
+                                            ₹{{ "%.2f"|format(requirement.max_price) }}
+                                        {% else %}
+                                            Any
+                                        {% endif %}
+
+                                    </strong>
+                                </div>
+
+                            </div>
+
+
+                            <div class="requirement-footer">
+
+                                <span>
+                                    Created {{ requirement.created_at }}
+                                </span>
+
+
+                                {% if requirement.status == "active" %}
+
+                                    <a href="#matches">
+                                        View Matches →
+                                    </a>
+
+                                {% endif %}
+
+                            </div>
+
+                        </article>
+
+                    {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <div class="empty-state">
+
+                    <div class="empty-icon">
+                        +
+                    </div>
+
+                    <h3>
+                        No requirements yet
+                    </h3>
+
+                    <p>
+                        Create your first requirement to start sourcing produce.
+                    </p>
+
+                    <a
+                        href="#add-requirement"
+                        class="btn btn-primary"
+                    >
+                        Add Requirement
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
+
+        <!-- ================= ADD REQUIREMENT ================= -->
+        <section
+            id="add-requirement"
+            class="section"
+        >
+
+            <div class="section-heading">
+
+                <div>
+                    <span class="section-label">
+                        PURCHASE DEMAND
+                    </span>
+
+                    <h2>
+                        Create Requirement
+                    </h2>
+
+                    <p>
+                        Define the produce, quantity, quality, location and price you need.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="form-card">
+
+                <form
+                    action="{{ url_for('dashboard.add_buyer_requirement') }}"
+                    method="POST"
+                >
+
+                    <div class="form-grid">
+
+                        <div class="form-group">
+                            <label for="crop_name">
+                                Crop *
+                            </label>
+
+                            <input
+                                type="text"
+                                id="crop_name"
+                                name="crop_name"
+                                placeholder="e.g. Onion"
+                                required
+                            >
+                        </div>
+
+
+                        <div class="form-group">
+                            <label for="variety">
+                                Variety
+                            </label>
+
+                            <input
+                                type="text"
+                                id="variety"
+                                name="variety"
+                                placeholder="e.g. Red Onion"
+                            >
+                        </div>
+
+
+                        <div class="form-group">
+                            <label for="min_quantity">
+                                Minimum Quantity
+                            </label>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                id="min_quantity"
+                                name="min_quantity"
+                                placeholder="e.g. 50"
+                            >
+                        </div>
+
+
+                        <div class="form-group">
+                            <label for="max_quantity">
+                                Maximum Quantity
+                            </label>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                id="max_quantity"
+                                name="max_quantity"
+                                placeholder="e.g. 200"
+                            >
+                        </div>
+
+
+                        <div class="form-group">
+                            <label for="quantity_unit">
+                                Quantity Unit
+                            </label>
+
+                            <select
+                                id="quantity_unit"
+                                name="quantity_unit"
+                            >
+                                <option value="quintal">
+                                    Quintal
+                                </option>
+
+                                <option value="kg">
+                                    Kg
+                                </option>
+
+                                <option value="ton">
+                                    Ton
+                                </option>
+                            </select>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label for="required_grade">
+                                Required Grade
+                            </label>
+
+                            <select
+                                id="required_grade"
+                                name="required_grade"
+                            >
+                                <option value="">
+                                    Any Grade
+                                </option>
+
+                                <option value="A">
+                                    Grade A
+                                </option>
+
+                                <option value="B">
+                                    Grade B
+                                </option>
+
+                                <option value="C">
+                                    Grade C
+                                </option>
+                            </select>
+                        </div>
+
+
+                        <div class="form-group">
+                            <label for="preferred_location">
+                                Preferred Location
+                            </label>
+
+                            <input
+                                type="text"
+                                id="preferred_location"
+                                name="preferred_location"
+                                placeholder="e.g. Nashik"
+                            >
+                        </div>
+
+
+                        <div class="form-group">
+                            <label for="max_price">
+                                Maximum Price
+                            </label>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                id="max_price"
+                                name="max_price"
+                                placeholder="₹ per quintal"
+                            >
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-actions">
+
+                        <button
+                            type="reset"
+                            class="btn btn-secondary"
+                        >
+                            Reset
+                        </button>
+
+
+                        <button
+                            type="submit"
+                            class="btn btn-primary"
+                        >
+                            Create Requirement
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>
