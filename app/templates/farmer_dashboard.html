@@ -23,7 +23,9 @@
 
         <ul class="nav-list" id="navList"></ul>
 
-        <button class="logout-btn" id="logoutBtn">Logout</button>
+        <a href="{{ url_for('auth.logout') }}" class="logout-btn">
+    Logout
+</a>
     </aside>
 
     <main>

@@ -1,7 +1,13 @@
-
 import bcrypt
 
-from flask import Blueprint, request, session, redirect, render_template
+from flask import (
+    Blueprint,
+    request,
+    session,
+    redirect,
+    render_template,
+    url_for,
+)
 
 from app.db.database import get_connection
 
@@ -9,9 +15,12 @@ from app.db.database import get_connection
 auth_bp = Blueprint("auth", __name__)
 
 
-# ---------- Login ----------
+# =========================================================
+# LOGIN
+# =========================================================
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+
     if request.method == "GET":
         return render_template("login.html")
 
@@ -39,24 +48,39 @@ def login():
         if not user:
             return "No account found with this email.", 404
 
+        stored_password = user["password"]
+
         if not bcrypt.checkpw(
             password.encode("utf-8"),
-            user["password"].encode("utf-8"),
+            stored_password.encode("utf-8"),
         ):
             return "Invalid password. Please try again.", 401
 
-        # Store user information in session
+        # -------------------------------------------------
+        # Clear any old session first
+        # -------------------------------------------------
+        session.clear()
+
+        # -------------------------------------------------
+        # Create new persistent session
+        # -------------------------------------------------
+        session.permanent = True
+
         session["user_id"] = user["id"]
         session["user_name"] = user["full_name"]
         session["user_role"] = user["role"]
 
+        # -------------------------------------------------
         # Redirect according to role
+        # -------------------------------------------------
         if user["role"] == "farmer":
             return redirect("/dashboard/farmer")
 
         if user["role"] == "buyer":
             return redirect("/dashboard/buyer")
 
+        # Invalid role
+        session.clear()
         return "Invalid user role.", 400
 
     finally:
@@ -64,13 +88,31 @@ def login():
         conn.close()
 
 
-# ---------- Registration ----------
+# =========================================================
+# LOGOUT
+# =========================================================
+@auth_bp.route("/logout", methods=["GET", "POST"])
+def logout():
+
+    # Completely remove all session data
+    session.clear()
+
+    # Go back to login page
+    return redirect(url_for("auth.login"))
+
+
+# =========================================================
+# REGISTRATION
+# =========================================================
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
+
     if request.method == "GET":
         return render_template("registration.html")
 
-    # ---------- Form data ----------
+    # -----------------------------------------------------
+    # Form data
+    # -----------------------------------------------------
     role = request.form.get("role", "").strip().lower()
 
     full_name = request.form.get("fullName", "").strip()
@@ -91,7 +133,9 @@ def register():
     business_name = request.form.get("businessName", "").strip()
     interests = request.form.get("interests", "").strip()
 
-    # ---------- Basic validation ----------
+    # -----------------------------------------------------
+    # Basic validation
+    # -----------------------------------------------------
     if not role or not full_name or not email or not password:
         return "Please fill all required fields.", 400
 
@@ -101,9 +145,9 @@ def register():
     if password != confirm_password:
         return "Passwords do not match.", 400
 
-    # ---------- Convert land size ----------
-    # MySQL DECIMAL column cannot accept ""
-    # Empty value should be stored as NULL.
+    # -----------------------------------------------------
+    # Convert land size
+    # -----------------------------------------------------
     if land_size_raw:
         try:
             land_size = float(land_size_raw)
@@ -113,15 +157,21 @@ def register():
 
         except ValueError:
             return "Land size must be a valid number.", 400
+
     else:
         land_size = None
 
-    # ---------- Database connection ----------
+    # -----------------------------------------------------
+    # Database connection
+    # -----------------------------------------------------
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
-        # ---------- Check duplicate email ----------
+
+        # -------------------------------------------------
+        # Check duplicate email
+        # -------------------------------------------------
         cursor.execute(
             "SELECT id FROM users WHERE email = %s",
             (email,),
@@ -132,13 +182,17 @@ def register():
         if existing:
             return "This email is already registered. Please login.", 409
 
-        # ---------- Hash password ----------
+        # -------------------------------------------------
+        # Hash password
+        # -------------------------------------------------
         hashed_password = bcrypt.hashpw(
             password.encode("utf-8"),
             bcrypt.gensalt(),
         ).decode("utf-8")
 
-        # ---------- Insert user ----------
+        # -------------------------------------------------
+        # Insert user
+        # -------------------------------------------------
         cursor.execute(
             """
             INSERT INTO users
@@ -180,7 +234,13 @@ def register():
 
         conn.commit()
 
-        # ---------- Set session ----------
+        # -------------------------------------------------
+        # Start session after registration
+        # -------------------------------------------------
+        session.clear()
+
+        session.permanent = True
+
         session["user_id"] = cursor.lastrowid
         session["user_name"] = full_name
         session["user_role"] = role
@@ -193,9 +253,10 @@ def register():
         cursor.close()
         conn.close()
 
-    # ---------- Redirect according to role ----------
+    # -----------------------------------------------------
+    # Redirect according to role
+    # -----------------------------------------------------
     if role == "farmer":
         return redirect("/dashboard/farmer")
 
     return redirect("/dashboard/buyer")
-

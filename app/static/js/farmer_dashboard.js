@@ -10,13 +10,41 @@
     const crops = Array.isArray(window.myCrops) ? window.myCrops : [];
 
     const nav = {
-        dashboard: { label: "Dashboard", view: "dashboard" },
-        "my-crops": { label: "My Crops", view: "my-crops" },
-        "market-prices": { label: "Market Prices", view: "market-prices" },
-        buyers: { label: "Buyers", view: "buyers" },
-        orders: { label: "Orders", view: "orders" },
-        profile: { label: "Profile", view: "profile" },
-    };
+    dashboard: {
+        label: "Dashboard",
+        view: "dashboard"
+    },
+
+    "my-crops": {
+        label: "My Crops",
+        view: "my-crops"
+    },
+
+    "market-prices": {
+        label: "Market Prices",
+        view: "market-prices"
+    },
+
+    buyers: {
+        label: "Buyers",
+        view: "buyers"
+    },
+
+    offers: {
+        label: "Offers",
+        externalUrl: "/offers/farmer"
+    },
+
+    orders: {
+        label: "Orders",
+        view: "orders"
+    },
+
+    profile: {
+        label: "Profile",
+        view: "profile"
+    }
+};
 
     const viewToGroup = {
         dashboard: "dashboard",
@@ -97,31 +125,39 @@
     ========================================= */
 
     function renderNav() {
-        const navList = $("navList");
+    const navList = $("navList");
 
-        if (!navList) return;
-
-        navList.innerHTML = "";
-
-        Object.entries(nav).forEach(([key, item]) => {
-            const li = document.createElement("li");
-            const button = document.createElement("button");
-
-            button.className =
-                `nav-btn${key === activeGroup ? " active" : ""}`;
-
-            button.textContent = item.label;
-
-            button.addEventListener("click", () => {
-                activeGroup = key;
-                goTo(item.view);
-            });
-
-            li.appendChild(button);
-            navList.appendChild(li);
-        });
+    if (!navList) {
+        return;
     }
 
+    navList.innerHTML = "";
+
+    Object.entries(nav).forEach(([key, item]) => {
+
+        const li = document.createElement("li");
+        const button = document.createElement("button");
+
+        button.className =
+            `nav-btn${key === activeGroup ? " active" : ""}`;
+
+        button.textContent = item.label;
+
+        button.addEventListener("click", () => {
+
+            if (item.externalUrl) {
+                window.location.href = item.externalUrl;
+                return;
+            }
+
+            activeGroup = key;
+            goTo(item.view);
+        });
+
+        li.appendChild(button);
+        navList.appendChild(li);
+    });
+}
     function goTo(viewId) {
         document.querySelectorAll(".view").forEach((view) => {
             view.classList.remove("active");
