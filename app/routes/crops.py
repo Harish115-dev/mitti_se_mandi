@@ -1,17 +1,11 @@
-from __future__ import annotations
-
 from functools import wraps
 
-from flask import Blueprint, redirect, request, session, url_for
+from flask import Blueprint, request, redirect, url_for, session
 
 from app.db.database import get_connection
 
 
-crops_bp = Blueprint(
-    "crops",
-    __name__,
-    url_prefix="/dashboard/crops",
-)
+crops_bp = Blueprint("crops", __name__, url_prefix="/crops")
 
 
 def farmer_required(view):
@@ -33,22 +27,38 @@ def farmer_required(view):
 def add_crop():
     crop_name = request.form.get("crop_name", "").strip()
     quantity_raw = request.form.get("quantity", "").strip()
-    grade = request.form.get("grade", "Grade A").strip()
+    grade = request.form.get("grade", "").strip()
     price_raw = request.form.get("price", "").strip()
-    status = request.form.get("status", "Available").strip()
+    status = request.form.get("status", "available").strip().lower()
+
+    # Basic validation
+    if not crop_name:
+        return "Crop name is required", 400
+
+    if not quantity_raw:
+        return "Quantity is required", 400
+
+    if not price_raw:
+        return "Expected price is required", 400
 
     try:
-        quantity = int(quantity_raw)
-        price = float(price_raw)
+        quantity = float(quantity_raw)
+        expected_price = float(price_raw)
     except ValueError:
-        return redirect(
-            url_for("dashboard.farmer_dashboard")
-        )
+        return "Quantity and price must be valid numbers", 400
 
-    if not crop_name or quantity <= 0 or price <= 0:
-        return redirect(
-            url_for("dashboard.farmer_dashboard")
-        )
+    if quantity <= 0:
+        return "Quantity must be greater than 0", 400
+
+    if expected_price <= 0:
+        return "Expected price must be greater than 0", 400
+
+    allowed_statuses = {"available", "pending", "sold"}
+
+    if status not in allowed_statuses:
+        status = "available"
+
+    farmer_id = session["user_id"]
 
     conn = get_connection()
     cursor = conn.cursor()
@@ -57,20 +67,26 @@ def add_crop():
         cursor.execute(
             """
             INSERT INTO crops
-                (farmer_id, crop_name, quantity, grade, price, status)
+                (farmer_id, crop_name, quantity, grade, expected_price, status)
             VALUES
                 (%s, %s, %s, %s, %s, %s)
             """,
             (
-                session["user_id"],
+                farmer_id,
                 crop_name,
                 quantity,
                 grade,
-                price,
+                expected_price,
                 status,
             ),
         )
+
         conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
+
     finally:
         cursor.close()
         conn.close()
