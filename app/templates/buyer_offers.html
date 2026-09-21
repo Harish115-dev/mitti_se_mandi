@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Mitti Se Mandi — My Offers</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/buyer_dashboard.css') }}"
+    >
+
+    <style>
+
+        body {
+            margin: 0;
+            font-family: Inter, Arial, sans-serif;
+            background: #f6f7f2;
+            color: #25352a;
+        }
+
+        .offers-page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            margin: 0 0 6px;
+            font-size: 2rem;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #6b756d;
+        }
+
+        .back-btn {
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            background: #244b2f;
+            color: white;
+            font-weight: 600;
+        }
+
+        .offers-grid {
+            display: grid;
+            gap: 18px;
+        }
+
+        .offer-card {
+            background: white;
+            border: 1px solid #e2e7e2;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.04);
+        }
+
+        .offer-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 18px;
+        }
+
+        .crop-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .subtext {
+            color: #6b756d;
+            font-size: 0.9rem;
+        }
+
+        .status {
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .status.pending {
+            background: #fff4d6;
+            color: #815d00;
+        }
+
+        .status.accepted {
+            background: #e5f5e8;
+            color: #246333;
+        }
+
+        .status.rejected {
+            background: #fde8e8;
+            color: #a12b2b;
+        }
+
+        .status.countered {
+            background: #e8eefc;
+            color: #35559a;
+        }
+
+        .status.cancelled {
+            background: #eeeeee;
+            color: #666666;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .info-box {
+            background: #f7f9f6;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .info-label {
+            display: block;
+            font-size: 0.78rem;
+            color: #748078;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-weight: 700;
+        }
+
+        .section {
+            border-top: 1px solid #edf0ed;
+            margin-top: 18px;
+            padding-top: 16px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .farmer-info {
+            line-height: 1.6;
+        }
+
+        .transaction-box {
+            background: #f4f8f4;
+            border-radius: 12px;
+            padding: 15px;
+        }
+
+        .transaction-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 8px;
+        }
+
+        .transaction-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .transaction-label {
+            color: #6b756d;
+        }
+
+        .transaction-value {
+            font-weight: 700;
+        }
+
+        .message-box {
+            padding: 13px 15px;
+            border-radius: 10px;
+            background: #fafaf8;
+            border: 1px solid #ecefe9;
+            line-height: 1.5;
+        }
+
+        .empty {
+            background: white;
+            border: 1px dashed #ccd4cd;
+            border-radius: 16px;
+            padding: 55px 20px;
+            text-align: center;
+            color: #6b756d;
+        }
+
+        .empty h3 {
+            margin-top: 0;
+            color: #304037;
+        }
+
+        @media (max-width: 800px) {
+
+            .offers-page {
+                padding: 20px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 520px) {
+
+            .offer-top {
+                flex-direction: column;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .transaction-row {
+                flex-direction: column;
+                gap: 3px;
+            }
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+<div class="offers-page">
+
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <div class="page-header">
+
+        <div>
+
+            <h1>
+                My Offers
+            </h1>
+
+            <p>
+                Track offers you have made to farmers.
+            </p>
+
+        </div>
+
+
+        <a
+            href="{{ url_for('dashboard.buyer_dashboard') }}"
+            class="back-btn"
+        >
+            ← Dashboard
+        </a>
+
+    </div>
+
+
+    <!-- =====================================================
+         OFFERS
+    ====================================================== -->
+
+    {% if offers %}
+
+        <div class="offers-grid">
+
+            {% for offer in offers %}
+
+                {% set offer_status =
+                    offer.offer_status|lower
+                %}
+
+
+                <div class="offer-card">
+
+
+                    <!-- TOP -->
+                    <div class="offer-top">
+
+                        <div>
+
+                            <div class="crop-name">
+                                {{ offer.crop_name }}
+                            </div>
+
+                            <div class="subtext">
+
+                                Offer #{{ offer.offer_id }}
+
+                                ·
+
+                                Listing #{{ offer.listing_id }}
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="
+                                status
+                                {{ offer_status }}
+                            "
+                        >
+                            {{ offer.offer_status }}
+                        </div>
+
+                    </div>
+
+
+                    <!-- OFFER DETAILS -->
+                    <div class="info-grid">
+
+
+                        <div class="info-box">
+
+                            <span class="info-label">
+                                Quantity
+                            </span>
+
+                            <div class="info-value">
+
+                                {{ offer.offer_quantity }}
+
+                                {{ offer.quantity_unit }}
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-box">
+
+                            <span class="info-label">
+                                Your Offer
+                            </span>
+
+                            <div class="info-value">
+
+                                ₹{{ offer.offered_price }}
+
+                                / {{ offer.quantity_unit }}
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-box">
+
+                            <span class="info-label">
+                                Asking Price
+                            </span>
+
+                            <div class="info-value">
+
+                                ₹{{ offer.asking_price }}
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-box">
+
+                            <span class="info-label">
+                                Farmer
+                            </span>
+
+                            <div class="info-value">
+
+                                {{ offer.farmer_name }}
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                    <!-- FARMER -->
+                    <div class="section">
+
+                        <div class="section-title">
+                            Farmer
+                        </div>
+
+                        <div class="farmer-info">
+
+                            {{ offer.farmer_name }}
+
+                            {% if offer.location %}
+                                <br>
+                                Location:
+                                {{ offer.location }}
+                            {% endif %}
+
+                            {% if offer.market_name %}
+                                <br>
+                                Market:
+                                {{ offer.market_name }}
+                            {% endif %}
+
+                            {% if offer.grade %}
+                                <br>
+                                Grade:
+                                {{ offer.grade }}
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- MESSAGE -->
+                    {% if offer.message %}
+
+                        <div class="section">
+
+                            <div class="section-title">
+                                Your Message
+                            </div>
+
+                            <div class="message-box">
+
+                                {{ offer.message }}
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <!-- ACCEPTED TRANSACTION -->
+                    {% if offer.offer_status == "accepted" %}
+
+                        <div class="section">
+
+                            <div class="section-title">
+                                Order / Transaction
+                            </div>
+
+
+                            <div class="transaction-box">
+
+                                <div class="transaction-row">
+
+                                    <span
+                                        class="transaction-label"
+                                    >
+                                        Transaction
+                                    </span>
+
+                                    <span
+                                        class="transaction-value"
+                                    >
+
+                                        #{{ offer.transaction_id }}
+
+                                    </span>
+
+                                </div>
+
+
+                                <div class="transaction-row">
+
+                                    <span
+                                        class="transaction-label"
+                                    >
+                                        Transaction Status
+                                    </span>
+
+                                    <span
+                                        class="transaction-value"
+                                    >
+
+                                        {{ offer.transaction_status }}
+
+                                    </span>
+
+                                </div>
+
+
+                                <div class="transaction-row">
+
+                                    <span
+                                        class="transaction-label"
+                                    >
+                                        Payment Status
+                                    </span>
+
+                                    <span
+                                        class="transaction-value"
+                                    >
+
+                                        {{ offer.payment_status or "pending" }}
+
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <!-- TIMESTAMP -->
+                    <div class="section">
+
+                        <div class="subtext">
+
+                            Submitted:
+                            {{ offer.created_at }}
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+
+        <!-- NO OFFERS -->
+        <div class="empty">
+
+            <h3>
+                No offers yet
+            </h3>
+
+            <p>
+                Offers you make to farmers will appear here.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+
+</div>
+
+</body>
+</html>

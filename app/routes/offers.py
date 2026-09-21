@@ -1,4 +1,5 @@
 from functools import wraps
+from decimal import Decimal
 
 from flask import (
     Blueprint,
@@ -71,6 +72,9 @@ def create_offer(listing_id):
 
     try:
 
+        # -------------------------------------------------
+        # Get listing
+        # -------------------------------------------------
         cursor.execute(
             """
             SELECT
@@ -111,13 +115,18 @@ def create_offer(listing_id):
                 404,
             )
 
+        # -------------------------------------------------
+        # Prevent buyer from offering on own listing
+        # -------------------------------------------------
         if listing["farmer_id"] == buyer_id:
             return (
                 "You cannot make an offer on your own listing.",
                 403,
             )
 
-        # GET = display form
+        # -------------------------------------------------
+        # GET = show offer form
+        # -------------------------------------------------
         if request.method == "GET":
 
             return render_template(
@@ -125,7 +134,9 @@ def create_offer(listing_id):
                 listing=listing,
             )
 
+        # -------------------------------------------------
         # POST = create offer
+        # -------------------------------------------------
         quantity_raw = request.form.get(
             "quantity",
             "",
@@ -141,11 +152,20 @@ def create_offer(listing_id):
             "",
         ).strip()
 
+        # -------------------------------------------------
+        # Validate quantity
+        # -------------------------------------------------
         try:
             quantity = float(quantity_raw)
         except ValueError:
-            return "Quantity must be a valid number.", 400
+            return (
+                "Quantity must be a valid number.",
+                400,
+            )
 
+        # -------------------------------------------------
+        # Validate offered price
+        # -------------------------------------------------
         try:
             offered_price = float(
                 offered_price_raw
@@ -180,7 +200,9 @@ def create_offer(listing_id):
                 400,
             )
 
+        # -------------------------------------------------
         # Prevent duplicate pending offer
+        # -------------------------------------------------
         cursor.execute(
             """
             SELECT id
@@ -205,6 +227,9 @@ def create_offer(listing_id):
                 409,
             )
 
+        # -------------------------------------------------
+        # Insert offer
+        # -------------------------------------------------
         cursor.execute(
             """
             INSERT INTO offers
@@ -244,12 +269,108 @@ def create_offer(listing_id):
         )
 
     except Exception:
-
         conn.rollback()
         raise
 
     finally:
+        cursor.close()
+        conn.close()
 
+
+# =========================================================
+# BUYER - MY OFFERS
+# =========================================================
+
+@offers_bp.route("/buyer")
+@buyer_required
+def buyer_offers():
+
+    buyer_id = session["user_id"]
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+
+        cursor.execute(
+            """
+            SELECT
+                o.id AS offer_id,
+                o.listing_id,
+                o.quantity AS offer_quantity,
+                o.offered_price,
+                o.message,
+                o.status AS offer_status,
+                o.created_at,
+                o.updated_at,
+
+                l.title AS listing_title,
+                l.asking_price,
+                l.status AS listing_status,
+
+                lot.crop_name,
+                lot.variety,
+                lot.grade,
+                lot.quantity_unit,
+                lot.market_name,
+                lot.location,
+
+                u.full_name AS farmer_name,
+
+                t.id AS transaction_id,
+                t.status AS transaction_status,
+
+                p.status AS payment_status
+
+            FROM offers o
+
+            JOIN listings l
+                ON l.id = o.listing_id
+
+            JOIN lots lot
+                ON lot.id = l.lot_id
+
+            JOIN users u
+                ON u.id = l.farmer_id
+
+            LEFT JOIN transactions t
+                ON t.offer_id = o.id
+
+            LEFT JOIN payments p
+                ON p.transaction_id = t.id
+
+            WHERE o.buyer_id = %s
+
+            ORDER BY o.created_at DESC
+            """,
+            (buyer_id,),
+        )
+
+        offers = cursor.fetchall()
+
+        # -------------------------------------------------
+        # Format timestamps for display
+        # -------------------------------------------------
+        for offer in offers:
+
+            if offer.get("created_at"):
+                offer["created_at"] = (
+                    offer["created_at"]
+                    .strftime("%Y-%m-%d %H:%M")
+                )
+
+            if offer.get("updated_at"):
+                offer["updated_at"] = (
+                    offer["updated_at"]
+                    .strftime("%Y-%m-%d %H:%M")
+                )
+
+        return render_template(
+            "buyer_offers.html",
+            offers=offers,
+        )
+
+    finally:
         cursor.close()
         conn.close()
 
@@ -357,7 +478,6 @@ def farmer_offers():
         )
 
     finally:
-
         cursor.close()
         conn.close()
 
@@ -377,22 +497,36 @@ def accept_offer(offer_id):
 
     try:
 
+        # -------------------------------------------------
+        # Get offer + listing + lot
+        # -------------------------------------------------
         cursor.execute(
             """
             SELECT
                 o.id,
                 o.listing_id,
+                o.buyer_id,
+                o.quantity,
+                o.offered_price,
                 o.status,
-                l.lot_id,
-                l.status AS listing_status
+
+                l.farmer_id,
+                l.status AS listing_status,
+
+                lot.id AS lot_id,
+                lot.status AS lot_status
 
             FROM offers o
 
             JOIN listings l
                 ON l.id = o.listing_id
 
+            JOIN lots lot
+                ON lot.id = l.lot_id
+
             WHERE o.id = %s
               AND l.farmer_id = %s
+
             FOR UPDATE
             """,
             (
@@ -406,19 +540,42 @@ def accept_offer(offer_id):
         if not offer:
             return "Offer not found.", 404
 
+        # -------------------------------------------------
+        # Only pending offers can be accepted
+        # -------------------------------------------------
         if offer["status"] != "pending":
             return (
                 "Only pending offers can be accepted.",
                 400,
             )
 
+        # -------------------------------------------------
+        # Listing must still be active
+        # -------------------------------------------------
         if offer["listing_status"] != "active":
             return (
                 "This listing is no longer active.",
                 400,
             )
 
+        # -------------------------------------------------
+        # Calculate transaction amount
+        # -------------------------------------------------
+        quantity = Decimal(
+            str(offer["quantity"])
+        )
+
+        agreed_price = Decimal(
+            str(offer["offered_price"])
+        )
+
+        total_amount = (
+            quantity * agreed_price
+        )
+
+        # -------------------------------------------------
         # Accept selected offer
+        # -------------------------------------------------
         cursor.execute(
             """
             UPDATE offers
@@ -428,7 +585,9 @@ def accept_offer(offer_id):
             (offer_id,),
         )
 
+        # -------------------------------------------------
         # Reject other pending offers
+        # -------------------------------------------------
         cursor.execute(
             """
             UPDATE offers
@@ -443,7 +602,9 @@ def accept_offer(offer_id):
             ),
         )
 
-        # Listing becomes paused
+        # -------------------------------------------------
+        # Pause listing
+        # -------------------------------------------------
         cursor.execute(
             """
             UPDATE listings
@@ -453,7 +614,9 @@ def accept_offer(offer_id):
             (offer["listing_id"],),
         )
 
-        # Lot becomes matched
+        # -------------------------------------------------
+        # Mark lot as matched
+        # -------------------------------------------------
         cursor.execute(
             """
             UPDATE lots
@@ -463,6 +626,71 @@ def accept_offer(offer_id):
             (offer["lot_id"],),
         )
 
+        # -------------------------------------------------
+        # Create transaction
+        # -------------------------------------------------
+        cursor.execute(
+            """
+            INSERT INTO transactions
+            (
+                offer_id,
+                farmer_id,
+                buyer_id,
+                quantity,
+                agreed_price,
+                total_amount,
+                status
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                %s,
+                'pending'
+            )
+            """,
+            (
+                offer_id,
+                farmer_id,
+                offer["buyer_id"],
+                quantity,
+                agreed_price,
+                total_amount,
+            ),
+        )
+
+        transaction_id = cursor.lastrowid
+
+        # -------------------------------------------------
+        # Create payment record
+        # -------------------------------------------------
+        cursor.execute(
+            """
+            INSERT INTO payments
+            (
+                transaction_id,
+                amount,
+                status
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                'pending'
+            )
+            """,
+            (
+                transaction_id,
+                total_amount,
+            ),
+        )
+
+        # -------------------------------------------------
+        # Commit complete workflow
+        # -------------------------------------------------
         conn.commit()
 
         return redirect(
@@ -522,12 +750,18 @@ def reject_offer(offer_id):
         if not offer:
             return "Offer not found.", 404
 
+        # -------------------------------------------------
+        # Only pending offers can be rejected
+        # -------------------------------------------------
         if offer["status"] != "pending":
             return (
                 "Only pending offers can be rejected.",
                 400,
             )
 
+        # -------------------------------------------------
+        # Reject offer
+        # -------------------------------------------------
         cursor.execute(
             """
             UPDATE offers

@@ -4,368 +4,1073 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Mitti Se Mandi</title>
 
-    <!-- CSS LINK IS HERE -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Main CSS -->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+
+    <!-- Logo visibility fix -->
+    <style>
+        .navbar .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .navbar .logo-container {
+            width: 64px;
+            height: 64px;
+            min-width: 64px;
+            min-height: 64px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .navbar .logo-container img {
+            width: 64px;
+            height: 64px;
+
+            display: block;
+            object-fit: contain;
+        }
+
+        .navbar .brand-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+    </style>
 
 </head>
 
+
 <body>
 
+    <!-- =====================================================
+         NAVBAR
+    ====================================================== -->
     <nav class="navbar">
-        <!-- Logo Section -->
+
+        <!-- LOGO / BRAND -->
         <a href="#home" class="brand">
+
             <div class="logo-container">
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Mitti Se Mandi">
+
+                <img
+                    src="{{ url_for('static', filename='images/logo.png') }}"
+                    alt="Mitti Se Mandi Logo"
+                >
+
             </div>
+
+
             <div class="brand-text">
-                <span class="brand-name">Mitti Se Mandi</span>
-                <span class="brand-tagline" data-en="Khet Se Bazar Tak" data-hi="खेत से बाज़ार तक"
-                    data-mr="शेतातून बाजारात">Khet Se Bazar Tak</span>
+
+                <span class="brand-name">
+                    Mitti Se Mandi
+                </span>
+
+                <span
+                    class="brand-tagline"
+                    data-en="Khet Se Bazar Tak"
+                    data-hi="खेत से बाज़ार तक"
+                    data-mr="शेतातून बाजारात"
+                >
+                    Khet Se Bazar Tak
+                </span>
+
             </div>
+
         </a>
 
-        <!-- Navigation Links -->
+
+        <!-- NAVIGATION LINKS -->
         <ul class="nav-links">
-            <li><a href="#home" data-en="Home" data-hi="होम" data-mr="मुख्यपृष्ठ">Home</a></li>
-            <li><a href="#about" data-en="About" data-hi="हमारे बारे में" data-mr="आमच्याबद्दल">About</a></li>
-            <li><a href="#how-it-works" data-en="How it Works" data-hi="यह कैसे काम करता है"
-                    data-mr="हे कसे कार्य करते">How it Works</a></li>
-            <li><a href="{{ url_for('auth.login') }}" data-en="Market Price" data-hi="बाजार भाव" data-mr="बाजार भाव">Market Price</a></li>
-            <li><a href="#contact" data-en="Contact" data-hi="संपर्क करें" data-mr="संपर्क">Contact</a></li>
+
+            <li>
+                <a
+                    href="#home"
+                    data-en="Home"
+                    data-hi="होम"
+                    data-mr="मुख्यपृष्ठ"
+                >
+                    Home
+                </a>
+            </li>
+
+
+            <li>
+                <a
+                    href="#about"
+                    data-en="About"
+                    data-hi="हमारे बारे में"
+                    data-mr="आमच्याबद्दल"
+                >
+                    About
+                </a>
+            </li>
+
+
+            <li>
+                <a
+                    href="#how-it-works"
+                    data-en="How it Works"
+                    data-hi="यह कैसे काम करता है"
+                    data-mr="हे कसे कार्य करते"
+                >
+                    How it Works
+                </a>
+            </li>
+
+
+            <li>
+                <a
+                    href="{{ url_for('auth.login') }}"
+                    data-en="Market Price"
+                    data-hi="बाजार भाव"
+                    data-mr="बाजार भाव"
+                >
+                    Market Price
+                </a>
+            </li>
+
+
+            <li>
+                <a
+                    href="#contact"
+                    data-en="Contact"
+                    data-hi="संपर्क करें"
+                    data-mr="संपर्क"
+                >
+                    Contact
+                </a>
+            </li>
+
         </ul>
 
-        <!-- Right Controls -->
+
+        <!-- RIGHT CONTROLS -->
         <div class="controls">
-            <!-- Language Switcher -->
-            <div class="lang-switch" id="langSwitch">
-                <button class="lang-btn active" data-lang="en">En</button>
-                <button class="lang-btn" data-lang="hi">Hin</button>
-                <button class="lang-btn" data-lang="mr">Mar</button>
+
+            <!-- LANGUAGE SWITCHER -->
+            <div
+                class="lang-switch"
+                id="langSwitch"
+            >
+
+                <button
+                    class="lang-btn active"
+                    data-lang="en"
+                >
+                    En
+                </button>
+
+                <button
+                    class="lang-btn"
+                    data-lang="hi"
+                >
+                    Hin
+                </button>
+
+                <button
+                    class="lang-btn"
+                    data-lang="mr"
+                >
+                    Mar
+                </button>
+
             </div>
 
-            <!-- Login / Register Dropdown -->
+
+            <!-- LOGIN / REGISTER -->
             <div class="auth-dropdown">
-                <button class="login-btn dropdown-toggle" data-en="Login / Register" data-hi="लॉगिन / रजिस्टर"
-                    data-mr="लॉगिन / नोंदणी">
+
+                <button
+                    class="login-btn dropdown-toggle"
+                    data-en="Login / Register"
+                    data-hi="लॉगिन / रजिस्टर"
+                    data-mr="लॉगिन / नोंदणी"
+                >
                     Login / Register
-                    <span class="arrow">▼</span>
+
+                    <span class="arrow">
+                        ▼
+                    </span>
+
                 </button>
+
+
                 <div class="dropdown-menu">
 
-                    <a href="{{ url_for('auth.login') }}" class="dropdown-item">
+                    <a
+                        href="{{ url_for('auth.login') }}"
+                        class="dropdown-item"
+                    >
                         Login
                     </a>
 
-                    <a href="{{ url_for('auth.register') }}" class="dropdown-item">
+
+                    <a
+                        href="{{ url_for('auth.register') }}"
+                        class="dropdown-item"
+                    >
                         Register
                     </a>
 
                 </div>
+
             </div>
+
+        </div>
+
     </nav>
 
 
-    <!-- HERO SECTION -->
-    <section id="home" class="hero-section">
+    <!-- =====================================================
+         HERO SECTION
+    ====================================================== -->
+    <section
+        id="home"
+        class="hero-section"
+    >
+
         <div class="hero-container">
+
             <div class="hero-content">
+
                 <div class="hero-subtitle">
+
                     <span class="line"></span>
-                    <span data-en="Direct from farm to market" data-hi="सीधे खेत से बाज़ार तक"
-                        data-mr="थेट शेतातून बाजारात">Direct from farm to market</span>
+
+                    <span
+                        data-en="Direct from farm to market"
+                        data-hi="सीधे खेत से बाज़ार तक"
+                        data-mr="थेट शेतातून बाजारात"
+                    >
+                        Direct from farm to market
+                    </span>
+
                 </div>
-                <h1 class="hero-title" data-en="Khet Se Bazar Tak, Har Faisla Smart."
-                    data-hi="खेत से बाज़ार तक, हर फैसला स्मार्ट।" data-mr="शेतातून बाजारात, प्रत्येक निर्णय स्मार्ट.">
-                    Khet Se Bazar Tak, Har Faisla Smart.</h1>
-                <p class="hero-description"
+
+
+                <h1
+                    class="hero-title"
+                    data-en="Khet Se Bazar Tak, Har Faisla Smart."
+                    data-hi="खेत से बाज़ार तक, हर फैसला स्मार्ट।"
+                    data-mr="शेतातून बाजारात, प्रत्येक निर्णय स्मार्ट."
+                >
+                    Khet Se Bazar Tak, Har Faisla Smart.
+                </h1>
+
+
+                <p
+                    class="hero-description"
                     data-en="Mitti Se Mandi connects farmers directly with buyers, backed by live prices and AI-guided advice — so every harvest finds its best price."
                     data-hi="मिट्टी से मंडी किसानों को सीधे खरीदारों से जोड़ती है, लाइव कीमतों और AI-निर्देशित सलाह के साथ — ताकि हर फसल को उसका सबसे अच्छा दाम मिले।"
-                    data-mr="मिट्टी से मंडी शेतकऱ्यांना थेट खरेदीदारांशी जोडते, थेट किमती आणि AI-मार्गदर्शित सल्ल्यासह — जेणेकरून प्रत्येक पिकाला त्याची सर्वोत्तम किंमत मिळेल.">
-                    Mitti Se Mandi connects farmers directly with buyers, backed by live prices and AI-guided advice —
-                    so every harvest finds its best price.
+                    data-mr="मिट्टी से मंडी शेतकऱ्यांना थेट खरेदीदारांशी जोडते, थेट किमती आणि AI-मार्गदर्शित सल्ल्यासह — जेणेकरून प्रत्येक पिकाला त्याची सर्वोत्तम किंमत मिळेल."
+                >
+                    Mitti Se Mandi connects farmers directly with buyers,
+                    backed by live prices and AI-guided advice — so every
+                    harvest finds its best price.
                 </p>
+
             </div>
+
 
             <div class="hero-visual">
+
                 <div class="sun-shape"></div>
+
+
                 <div class="slider-container">
-                    <img src="{{ url_for('static', filename='images/hero1.png') }}" alt="Hero Image 1"
-                        class="slider-image active">
-                    <img src="{{ url_for('static', filename='images/hero2.png') }}" alt="Hero Image 2"
-                        class="slider-image">
-                    <img src="{{ url_for('static', filename='images/hero1.png') }}" alt="Hero Image 3"
-                        class="slider-image">
+
+                    <img
+                        src="{{ url_for('static', filename='images/hero1.png') }}"
+                        alt="Hero Image 1"
+                        class="slider-image active"
+                    >
+
+                    <img
+                        src="{{ url_for('static', filename='images/hero2.png') }}"
+                        alt="Hero Image 2"
+                        class="slider-image"
+                    >
+
+                    <img
+                        src="{{ url_for('static', filename='images/hero1.png') }}"
+                        alt="Hero Image 3"
+                        class="slider-image"
+                    >
+
                 </div>
+
             </div>
+
         </div>
+
     </section>
 
 
-    <!-- ABOUT US SECTION -->
-    <section id="about" class="about-section">
+    <!-- =====================================================
+         ABOUT US
+    ====================================================== -->
+    <section
+        id="about"
+        class="about-section"
+    >
+
         <div class="about-container">
+
             <div class="about-visual">
+
                 <div class="graphic-box">
-                    <img src="{{ url_for('static', filename='images/hero2.png') }}" alt="About Mitti Se Mandi"
-                        class="about-image">
+
+                    <img
+                        src="{{ url_for('static', filename='images/hero2.png') }}"
+                        alt="About Mitti Se Mandi"
+                        class="about-image"
+                    >
+
                 </div>
+
             </div>
+
 
             <div class="about-content">
-                <span class="about-label" data-en="About us" data-hi="हमारे बारे में" data-mr="आमच्याबद्दल">About
-                    us</span>
-                <h2 class="about-title" data-en="One mandi, built around the farmer"
-                    data-hi="एक मंडी, किसान के इर्द-गिर्द बनी" data-mr="एक मंडी, शेतकऱ्याभोवती बांधलेली">One mandi,
-                    built around the farmer</h2>
-                <p class="about-description"
+
+                <span
+                    class="about-label"
+                    data-en="About us"
+                    data-hi="हमारे बारे में"
+                    data-mr="आमच्याबद्दल"
+                >
+                    About us
+                </span>
+
+
+                <h2
+                    class="about-title"
+                    data-en="One mandi, built around the farmer"
+                    data-hi="एक मंडी, किसान के इर्द-गिर्द बनी"
+                    data-mr="एक मंडी, शेतकऱ्याभोवती बांधलेली"
+                >
+                    One mandi, built around the farmer
+                </h2>
+
+
+                <p
+                    class="about-description"
                     data-en="We built Mitti Se Mandi because too much of a farmer's harvest value gets lost between the field and the final buyer. Our platform closes that gap with live data, fair pricing, and direct connections."
                     data-hi="हमने मिट्टी से मंडी इसलिए बनाई क्योंकि खेत और अंतिम खरीदार के बीच किसान की फसल का बहुत अधिक मूल्य खो जाता है। हमारा प्लेटफॉर्म लाइव डेटा, उचित मूल्य निर्धारण और सीधे संपर्कों के साथ इस अंतर को कम करता है।"
-                    data-mr="आम्ही मिट्टी से मंडी तयार केले कारण शेत आणि अंतिम खरेदीदार यांच्यातील शेतकऱ्याच्या पिकाचे मूल्य खूप कमी होते. आमचे प्लॅटफॉर्म थेट डेटा, योग्य किंमत आणि थेट कनेक्शनसह हे अंतर भरते.">
-                    We built Mitti Se Mandi because too much of a farmer's harvest value gets lost between the field and
-                    the final buyer. Our platform closes that gap with live data, fair pricing, and direct connections.
+                    data-mr="आम्ही मिट्टी से मंडी तयार केले कारण शेत आणि अंतिम खरेदीदार यांच्यातील शेतकऱ्याच्या पिकाचे मूल्य खूप कमी होते. आमचे प्लॅटफॉर्म थेट डेटा, योग्य किंमत आणि थेट कनेक्शनसह हे अंतर भरते."
+                >
+                    We built Mitti Se Mandi because too much of a farmer's
+                    harvest value gets lost between the field and the final
+                    buyer. Our platform closes that gap with live data,
+                    fair pricing, and direct connections.
                 </p>
+
 
                 <ul class="about-list">
+
                     <li>
-                        <div class="list-number">1</div>
+
+                        <div class="list-number">
+                            1
+                        </div>
+
                         <div class="list-text">
-                            <h4 data-en="No middlemen markup" data-hi="कोई बिचौलिया मार्कअप नहीं"
-                                data-mr="मध्यस्थांचे मार्कअप नाही">No middlemen markup</h4>
-                            <p data-en="Sell straight to verified buyers and keep more of every sale."
+
+                            <h4
+                                data-en="No middlemen markup"
+                                data-hi="कोई बिचौलिया मार्कअप नहीं"
+                                data-mr="मध्यस्थांचे मार्कअप नाही"
+                            >
+                                No middlemen markup
+                            </h4>
+
+                            <p
+                                data-en="Sell straight to verified buyers and keep more of every sale."
                                 data-hi="सत्यापित खरीदारों को सीधे बेचें और हर बिक्री का अधिक हिस्सा अपने पास रखें।"
-                                data-mr="सत्यापित खरेदीदारांना थेट विका आणि प्रत्येक विक्रीचा अधिक भाग ठेवा.">Sell
-                                straight to verified buyers and keep more of every sale.</p>
+                                data-mr="सत्यापित खरेदीदारांना थेट विका आणि प्रत्येक विक्रीचा अधिक भाग ठेवा."
+                            >
+                                Sell straight to verified buyers and keep
+                                more of every sale.
+                            </p>
+
                         </div>
+
                     </li>
+
+
                     <li>
-                        <div class="list-number">2</div>
+
+                        <div class="list-number">
+                            2
+                        </div>
+
                         <div class="list-text">
-                            <h4 data-en="Live mandi data" data-hi="लाइव मंडी डेटा" data-mr="थेट मंडी डेटा">Live mandi
-                                data</h4>
-                            <p data-en="Prices update from real markets, so you always know what your crop is worth today."
+
+                            <h4
+                                data-en="Live mandi data"
+                                data-hi="लाइव मंडी डेटा"
+                                data-mr="थेट मंडी डेटा"
+                            >
+                                Live mandi data
+                            </h4>
+
+                            <p
+                                data-en="Prices update from real markets, so you always know what your crop is worth today."
                                 data-hi="असली बाजारों से कीमतें अपडेट होती हैं, ताकि आपको हमेशा पता रहे कि आज आपकी फसल का क्या मूल्य है।"
-                                data-mr="वास्तविक बाजारांमधून किमती अपडेट होतात, जेणेकरून तुम्हाला नेहमी कळेल की आज तुमच्या पिकाची किंमत किती आहे.">
-                                Prices update from real markets, so you always know what your crop is worth today.</p>
+                                data-mr="वास्तविक बाजारांमधून किमती अपडेट होतात, जेणेकरून तुम्हाला नेहमी कळेल की आज तुमच्या पिकाची किंमत किती आहे."
+                            >
+                                Prices update from real markets, so you
+                                always know what your crop is worth today.
+                            </p>
+
                         </div>
+
                     </li>
+
+
                     <li>
-                        <div class="list-number">3</div>
-                        <div class="list-text">
-                            <h4 data-en="AI-guided decisions" data-hi="AI-निर्देशित निर्णय"
-                                data-mr="AI-मार्गदर्शित निर्णय">AI-guided decisions</h4>
-                            <p data-en="Get a recommended selling window and market based on demand trends."
-                                data-hi="मांग के रुझानों के आधार पर अनुशंसित बिक्री विंडो और बाजार प्राप्त करें।"
-                                data-mr="मागणीच्या कलांवर आधारित शिफारस केलेली विक्री विंडो आणि बाजार मिळवा.">Get a
-                                recommended selling window and market based on demand trends.</p>
+
+                        <div class="list-number">
+                            3
                         </div>
+
+                        <div class="list-text">
+
+                            <h4
+                                data-en="AI-guided decisions"
+                                data-hi="AI-निर्देशित निर्णय"
+                                data-mr="AI-मार्गदर्शित निर्णय"
+                            >
+                                AI-guided decisions
+                            </h4>
+
+                            <p
+                                data-en="Get a recommended selling window and market based on demand trends."
+                                data-hi="मांग के रुझानों के आधार पर अनुशंसित बिक्री विंडो और बाजार प्राप्त करें।"
+                                data-mr="मागणीच्या कलांवर आधारित शिफारस केलेली विक्री विंडो आणि बाजार मिळवा."
+                            >
+                                Get a recommended selling window and market
+                                based on demand trends.
+                            </p>
+
+                        </div>
+
                     </li>
+
                 </ul>
+
             </div>
+
         </div>
+
     </section>
 
 
-    <!-- HOW IT WORKS SECTION -->
-    <section id="how-it-works" class="how-it-works-section">
+    <!-- =====================================================
+         HOW IT WORKS
+    ====================================================== -->
+    <section
+        id="how-it-works"
+        class="how-it-works-section"
+    >
+
         <div class="hiw-container">
+
             <div class="hiw-header">
-                <span class="hiw-label" data-en="How it works" data-hi="यह कैसे काम करता है"
-                    data-mr="हे कसे कार्य करते">How it works</span>
-                <h2 class="hiw-title" data-en="Five steps from field to sale" data-hi="खेत से बिक्री तक पांच कदम"
-                    data-mr="शेतातून विक्रीपर्यंत पाच पायऱ्या">Five steps from field to sale</h2>
-                <p class="hiw-description"
+
+                <span
+                    class="hiw-label"
+                    data-en="How it works"
+                    data-hi="यह कैसे काम करता है"
+                    data-mr="हे कसे कार्य करते"
+                >
+                    How it works
+                </span>
+
+
+                <h2
+                    class="hiw-title"
+                    data-en="Five steps from field to sale"
+                    data-hi="खेत से बिक्री तक पांच कदम"
+                    data-mr="शेतातून विक्रीपर्यंत पाच पायऱ्या"
+                >
+                    Five steps from field to sale
+                </h2>
+
+
+                <p
+                    class="hiw-description"
                     data-en="A simple flow designed for how farmers actually work — no paperwork, no waiting rooms."
                     data-hi="एक सरल प्रवाह जो किसानों के वास्तविक काम करने के तरीके के लिए डिज़ाइन किया गया है — कोई कागजी कार्रवाई नहीं, कोई प्रतीक्षालय नहीं।"
-                    data-mr="शेतकरी प्रत्यक्षात कसे काम करतात यासाठी डिझाइन केलेला सोपा प्रवाह — कोणतीही कागदपत्रे नाहीत, प्रतीक्षालय नाहीत.">
-                    A simple flow designed for how farmers actually work — no paperwork, no waiting rooms.
+                    data-mr="शेतकरी प्रत्यक्षात कसे काम करतात यासाठी डिझाइन केलेला सोपा प्रवाह — कोणतीही कागदपत्रे नाहीत, प्रतीक्षालय नाहीत."
+                >
+                    A simple flow designed for how farmers actually work —
+                    no paperwork, no waiting rooms.
                 </p>
+
             </div>
+
 
             <div class="hiw-grid">
+
                 <div class="hiw-card">
-                    <div class="hiw-number">01</div>
-                    <h3 class="hiw-card-title" data-en="Add Crop" data-hi="फसल जोड़ें" data-mr="पीक जोडा">Add Crop</h3>
-                    <p class="hiw-card-text"
+
+                    <div class="hiw-number">
+                        01
+                    </div>
+
+                    <h3
+                        class="hiw-card-title"
+                        data-en="Add Crop"
+                        data-hi="फसल जोड़ें"
+                        data-mr="पीक जोडा"
+                    >
+                        Add Crop
+                    </h3>
+
+                    <p
+                        class="hiw-card-text"
                         data-en="List what you're harvesting, the quantity, and when it'll be ready."
                         data-hi="सूचीबद्ध करें कि आप क्या काट रहे हैं, मात्रा, और यह कब तैयार होगी।"
-                        data-mr="तुम्ही काय कापणी करत आहात, प्रमाण आणि ते कधी तयार होईल याची यादी करा.">List what you're
-                        harvesting, the quantity, and when it'll be ready.</p>
+                        data-mr="तुम्ही काय कापणी करत आहात, प्रमाण आणि ते कधी तयार होईल याची यादी करा."
+                    >
+                        List what you're harvesting, the quantity,
+                        and when it'll be ready.
+                    </p>
+
                 </div>
 
+
                 <div class="hiw-card">
-                    <div class="hiw-number">02</div>
-                    <h3 class="hiw-card-title" data-en="AI Analysis" data-hi="AI विश्लेषण" data-mr="AI विश्लेषण">AI
-                        Analysis</h3>
-                    <p class="hiw-card-text" data-en="We assess quality, timing, and nearby demand automatically."
+
+                    <div class="hiw-number">
+                        02
+                    </div>
+
+                    <h3
+                        class="hiw-card-title"
+                        data-en="AI Analysis"
+                        data-hi="AI विश्लेषण"
+                        data-mr="AI विश्लेषण"
+                    >
+                        AI Analysis
+                    </h3>
+
+                    <p
+                        class="hiw-card-text"
+                        data-en="We assess quality, timing, and nearby demand automatically."
                         data-hi="हम गुणवत्ता, समय और आस-पास की मांग का स्वचालित रूप से मूल्यांकन करते हैं।"
-                        data-mr="आम्ही गुणवत्ता, वेळ आणि जवळपासची मागणी स्वयंचलितपणे तपासतो.">We assess quality, timing,
-                        and nearby demand automatically.</p>
+                        data-mr="आम्ही गुणवत्ता, वेळ आणि जवळपासची मागणी स्वयंचलितपणे तपासतो."
+                    >
+                        We assess quality, timing, and nearby demand
+                        automatically.
+                    </p>
+
                 </div>
 
+
                 <div class="hiw-card">
-                    <div class="hiw-number">03</div>
-                    <h3 class="hiw-card-title" data-en="Rate Prediction" data-hi="दर भविष्यवाणी" data-mr="दर अंदाज">Rate
-                        Prediction</h3>
-                    <p class="hiw-card-text" data-en="Get a fair price estimate before you commit to any buyer."
+
+                    <div class="hiw-number">
+                        03
+                    </div>
+
+                    <h3
+                        class="hiw-card-title"
+                        data-en="Rate Prediction"
+                        data-hi="दर भविष्यवाणी"
+                        data-mr="दर अंदाज"
+                    >
+                        Rate Prediction
+                    </h3>
+
+                    <p
+                        class="hiw-card-text"
+                        data-en="Get a fair price estimate before you commit to any buyer."
                         data-hi="किसी भी खरीदार से वादा करने से पहले उचित मूल्य अनुमान प्राप्त करें।"
-                        data-mr="कोणत्याही खरेदीदाराशी वचन देण्यापूर्वी योग्य किंमतीचा अंदाज मिळवा.">Get a fair price
-                        estimate before you commit to any buyer.</p>
+                        data-mr="कोणत्याही खरेदीदाराशी वचन देण्यापूर्वी योग्य किंमतीचा अंदाज मिळवा."
+                    >
+                        Get a fair price estimate before you commit
+                        to any buyer.
+                    </p>
+
                 </div>
 
+
                 <div class="hiw-card">
-                    <div class="hiw-number">04</div>
-                    <h3 class="hiw-card-title" data-en="Find Buyers" data-hi="खरीदार खोजें" data-mr="खरेदीदार शोधा">Find
-                        Buyers</h3>
-                    <p class="hiw-card-text" data-en="Matched with verified buyers actively looking for your crop."
+
+                    <div class="hiw-number">
+                        04
+                    </div>
+
+                    <h3
+                        class="hiw-card-title"
+                        data-en="Find Buyers"
+                        data-hi="खरीदार खोजें"
+                        data-mr="खरेदीदार शोधा"
+                    >
+                        Find Buyers
+                    </h3>
+
+                    <p
+                        class="hiw-card-text"
+                        data-en="Matched with verified buyers actively looking for your crop."
                         data-hi="सत्यापित खरीदारों के साथ मिलान जो सक्रिय रूप से आपकी फसल की तलाश में हैं।"
-                        data-mr="सत्यापित खरेदीदारांशी जुळवले जे सक्रियपणे तुमच्या पिकाचा शोध घेत आहेत.">Matched with
-                        verified buyers actively looking for your crop.</p>
+                        data-mr="सत्यापित खरेदीदारांशी जुळवले जे सक्रियपणे तुमच्या पिकाचा शोध घेत आहेत."
+                    >
+                        Matched with verified buyers actively looking
+                        for your crop.
+                    </p>
+
                 </div>
+
 
                 <div class="hiw-card">
-                    <div class="hiw-number">05</div>
-                    <h3 class="hiw-card-title" data-en="Sell Smarter" data-hi="स्मार्ट बेचें" data-mr="स्मार्ट विका">
-                        Sell Smarter</h3>
-                    <p class="hiw-card-text" data-en="Close the deal directly, on terms that work in your favour."
+
+                    <div class="hiw-number">
+                        05
+                    </div>
+
+                    <h3
+                        class="hiw-card-title"
+                        data-en="Sell Smarter"
+                        data-hi="स्मार्ट बेचें"
+                        data-mr="स्मार्ट विका"
+                    >
+                        Sell Smarter
+                    </h3>
+
+                    <p
+                        class="hiw-card-text"
+                        data-en="Close the deal directly, on terms that work in your favour."
                         data-hi="सीधे सौदा बंद करें, ऐसी शर्तों पर जो आपके पक्ष में काम करें।"
-                        data-mr="थेट सौदा बंद करा, अशा अटींवर ज्या तुमच्या बाजूने काम करतात.">Close the deal directly,
-                        on terms that work in your favour.</p>
+                        data-mr="थेट सौदा बंद करा, अशा अटींवर ज्या तुमच्या बाजूने काम करतात."
+                    >
+                        Close the deal directly, on terms that work
+                        in your favour.
+                    </p>
+
                 </div>
+
             </div>
+
         </div>
+
     </section>
 
 
-    <!-- CTA BANNER SECTION -->
+    <!-- =====================================================
+         CTA
+    ====================================================== -->
     <section class="cta-banner-section">
+
         <div class="cta-container">
+
             <div class="cta-content">
-                <h2 class="cta-title" data-en="Ready to get a fair price for your next harvest?"
+
+                <h2
+                    class="cta-title"
+                    data-en="Ready to get a fair price for your next harvest?"
                     data-hi="अपनी अगली फसल के लिए उचित मूल्य पाने के लिए तैयार हैं?"
-                    data-mr="तुमच्या पुढील पिकासाठी योग्य किंमत मिळविण्यासाठी तयार आहात?">Ready to get a fair price for
-                    your next harvest?</h2>
+                    data-mr="तुमच्या पुढील पिकासाठी योग्य किंमत मिळविण्यासाठी तयार आहात?"
+                >
+                    Ready to get a fair price for your next harvest?
+                </h2>
+
             </div>
+
+
             <div class="cta-actions">
-                <a href="{{ url_for('auth.register') }}" class="btn btn-primary" data-en="Get Started Free" data-hi="मुफ्त में शुरू करें"
-                    data-mr="विनामूल्य सुरू करा">Get Started Free</a>
-                <a href="#how-it-works" class="btn btn-secondary" data-en="See How it Works"
-                    data-hi="देखें यह कैसे काम करता है" data-mr="हे कसे कार्य करते ते पहा">See How it Works</a>
+
+                <a
+                    href="{{ url_for('auth.register') }}"
+                    class="btn btn-primary"
+                    data-en="Get Started Free"
+                    data-hi="मुफ्त में शुरू करें"
+                    data-mr="विनामूल्य सुरू करा"
+                >
+                    Get Started Free
+                </a>
+
+
+                <a
+                    href="#how-it-works"
+                    class="btn btn-secondary"
+                    data-en="See How it Works"
+                    data-hi="देखें यह कैसे काम करता है"
+                    data-mr="हे कसे कार्य करते ते पहा"
+                >
+                    See How it Works
+                </a>
+
             </div>
+
         </div>
+
     </section>
 
 
-    <!-- CONTACT SECTION -->
-    <section id="contact" class="contact-section">
+    <!-- =====================================================
+         CONTACT
+    ====================================================== -->
+    <section
+        id="contact"
+        class="contact-section"
+    >
+
         <div class="contact-container">
+
             <div class="contact-info">
-                <span class="contact-label" data-en="Contact" data-hi="संपर्क करें" data-mr="संपर्क">Contact</span>
-                <h2 class="contact-title" data-en="Talk to the Mitti Se Mandi team"
-                    data-hi="मिट्टी से मंडी टीम से बात करें" data-mr="मिट्टी से मंडी टीमशी बोला">Talk to the Mitti Se
-                    Mandi team</h2>
-                <p class="contact-description"
+
+                <span
+                    class="contact-label"
+                    data-en="Contact"
+                    data-hi="संपर्क करें"
+                    data-mr="संपर्क"
+                >
+                    Contact
+                </span>
+
+
+                <h2
+                    class="contact-title"
+                    data-en="Talk to the Mitti Se Mandi team"
+                    data-hi="मिट्टी से मंडी टीम से बात करें"
+                    data-mr="मिट्टी से मंडी टीमशी बोला"
+                >
+                    Talk to the Mitti Se Mandi team
+                </h2>
+
+
+                <p
+                    class="contact-description"
                     data-en="Questions about listing a crop, buyer verification, or joining as a mandi partner — reach out."
                     data-hi="फसल सूचीबद्ध करने, खरीदार सत्यापन, या मंडी भागीदार के रूप में शामिल होने के बारे में प्रश्न — संपर्क करें।"
-                    data-mr="पीक सूचीबद्ध करणे, खरेदीदार पडताळणी किंवा मंडी भागीदार म्हणून सामील होण्याबद्दल प्रश्न — संपर्क साधा.">
-                    Questions about listing a crop, buyer verification, or joining as a mandi partner — reach out.
+                    data-mr="पीक सूचीबद्ध करणे, खरेदीदार पडताळणी किंवा मंडी भागीदार म्हणून सामील होण्याबद्दल प्रश्न — संपर्क साधा."
+                >
+                    Questions about listing a crop, buyer verification,
+                    or joining as a mandi partner — reach out.
                 </p>
 
+
                 <div class="contact-details">
+
                     <div class="detail-item">
-                        <span class="detail-label" data-en="Phone" data-hi="फ़ोन" data-mr="फोन">Phone</span>
-                        <span class="detail-value">+91 98765 43210</span>
+
+                        <span
+                            class="detail-label"
+                            data-en="Phone"
+                            data-hi="फ़ोन"
+                            data-mr="फोन"
+                        >
+                            Phone
+                        </span>
+
+                        <span class="detail-value">
+                            +91 98765 43210
+                        </span>
+
                     </div>
+
+
                     <div class="detail-item">
-                        <span class="detail-label" data-en="Email" data-hi="ईमेल" data-mr="ईमेल">Email</span>
-                        <span class="detail-value">hello@mittisemandi.in</span>
+
+                        <span
+                            class="detail-label"
+                            data-en="Email"
+                            data-hi="ईमेल"
+                            data-mr="ईमेल"
+                        >
+                            Email
+                        </span>
+
+                        <span class="detail-value">
+                            hello@mittisemandi.in
+                        </span>
+
                     </div>
+
+
                     <div class="detail-item">
-                        <span class="detail-label" data-en="Office" data-hi="कार्यालय" data-mr="कार्यालय">Office</span>
-                        <span class="detail-value" data-en="Regional support centres across India"
+
+                        <span
+                            class="detail-label"
+                            data-en="Office"
+                            data-hi="कार्यालय"
+                            data-mr="कार्यालय"
+                        >
+                            Office
+                        </span>
+
+                        <span
+                            class="detail-value"
+                            data-en="Regional support centres across India"
                             data-hi="पूरे भारत में क्षेत्रीय सहायता केंद्र"
-                            data-mr="संपूर्ण भारतात प्रादेशिक समर्थन केंद्रे">Regional support centres across
-                            India</span>
+                            data-mr="संपूर्ण भारतात प्रादेशिक समर्थन केंद्रे"
+                        >
+                            Regional support centres across India
+                        </span>
+
                     </div>
+
                 </div>
+
             </div>
 
+
+            <!-- CONTACT FORM -->
             <div class="contact-form-wrapper">
-                <form class="contact-form" action="#" method="POST">
+
+                <form
+                    class="contact-form"
+                    action="#"
+                    method="POST"
+                >
+
                     <div class="form-group">
-                        <label for="fullName" data-en="Full name" data-hi="पूरा नाम" data-mr="पूर्ण नाव">Full
-                            name</label>
-                        <input type="text" id="fullName" name="fullName" placeholder="Ramesh Patel" required>
+
+                        <label
+                            for="fullName"
+                            data-en="Full name"
+                            data-hi="पूरा नाम"
+                            data-mr="पूर्ण नाव"
+                        >
+                            Full name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="fullName"
+                            name="fullName"
+                            placeholder="Ramesh Patel"
+                            required
+                        >
+
                     </div>
+
+
                     <div class="form-group">
-                        <label for="phone" data-en="Phone number" data-hi="फ़ोन नंबर" data-mr="फोन नंबर">Phone
-                            number</label>
-                        <input type="tel" id="phone" name="phone" placeholder="98765 43210" required>
+
+                        <label
+                            for="phone"
+                            data-en="Phone number"
+                            data-hi="फ़ोन नंबर"
+                            data-mr="फोन नंबर"
+                        >
+                            Phone number
+                        </label>
+
+                        <input
+                            type="tel"
+                            id="phone"
+                            name="phone"
+                            placeholder="98765 43210"
+                            required
+                        >
+
                     </div>
+
+
                     <div class="form-group">
-                        <label for="message" data-en="Message" data-hi="संदेश" data-mr="संदेश">Message</label>
-                        <textarea id="message" name="message" rows="5" required></textarea>
+
+                        <label
+                            for="message"
+                            data-en="Message"
+                            data-hi="संदेश"
+                            data-mr="संदेश"
+                        >
+                            Message
+                        </label>
+
+                        <textarea
+                            id="message"
+                            name="message"
+                            rows="5"
+                            required
+                        ></textarea>
+
                     </div>
-                    <p class="form-note" data-en="This is a demo form — no data is sent anywhere."
+
+
+                    <p
+                        class="form-note"
+                        data-en="This is a demo form — no data is sent anywhere."
                         data-hi="यह एक डेमो फॉर्म है — कोई डेटा कहीं नहीं भेजा जाता है।"
-                        data-mr="हा एक डेमो फॉर्म आहे — कोणताही डेटा कुठेही पाठवला जात नाही.">This is a demo form — no
-                        data is sent anywhere.</p>
-                    <button type="submit" class="submit-btn" data-en="Send Message" data-hi="संदेश भेजें"
-                        data-mr="संदेश पाठवा">Send Message</button>
+                        data-mr="हा एक डेमो फॉर्म आहे — कोणताही डेटा कुठेही पाठवला जात नाही."
+                    >
+                        This is a demo form — no data is sent anywhere.
+                    </p>
+
+
+                    <button
+                        type="submit"
+                        class="submit-btn"
+                        data-en="Send Message"
+                        data-hi="संदेश भेजें"
+                        data-mr="संदेश पाठवा"
+                    >
+                        Send Message
+                    </button>
+
                 </form>
+
             </div>
+
         </div>
+
     </section>
 
 
-    <!-- FOOTER SECTION -->
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
     <footer class="footer-section">
+
         <div class="footer-container">
+
             <div class="footer-top">
+
                 <div class="footer-brand">
-                    <h2 class="footer-logo">Mitti Se Mandi</h2>
-                    <p class="footer-tagline"
+
+                    <h2 class="footer-logo">
+                        Mitti Se Mandi
+                    </h2>
+
+                    <p
+                        class="footer-tagline"
                         data-en="Khet Se Bazar Tak, Har Faisla Smart. A direct line between farmers and fair markets."
                         data-hi="खेत से बाज़ार तक, हर फैसला स्मार्ट। किसानों और निष्पक्ष बाजारों के बीच सीधी लाइन।"
-                        data-mr="शेतातून बाजारात, प्रत्येक निर्णय स्मार्ट. शेतकरी आणि निष्पक्ष बाजारांमधील थेट दुवा.">
-                        Khet Se Bazar Tak, Har Faisla Smart. A direct line between farmers and fair markets.
+                        data-mr="शेतातून बाजारात, प्रत्येक निर्णय स्मार्ट. शेतकरी आणि निष्पक्ष बाजारांमधील थेट दुवा."
+                    >
+                        Khet Se Bazar Tak, Har Faisla Smart.
+                        A direct line between farmers and fair markets.
                     </p>
+
                 </div>
 
-                <!-- Naya Account Column (Login aur Register alag) -->
+
+                <!-- ACCOUNT -->
                 <div class="footer-account">
-                    <h3 class="footer-heading" data-en="Account" data-hi="अकाउंट" data-mr="खाते">Account</h3>
+
+                    <h3
+                        class="footer-heading"
+                        data-en="Account"
+                        data-hi="अकाउंट"
+                        data-mr="खाते"
+                    >
+                        Account
+                    </h3>
+
                     <ul>
 
-
-                        <li><a  href="{{ url_for('auth.login') }}" data-en="Login" data-hi="लॉगिन" data-mr="लॉगिन">Login</a>
+                        <li>
+                            <a
+                                href="{{ url_for('auth.login') }}"
+                                data-en="Login"
+                                data-hi="लॉगिन"
+                                data-mr="लॉगिन"
+                            >
+                                Login
+                            </a>
                         </li>
-                        <li><a href="{{ url_for('auth.register') }}" data-en="Register" data-hi="रजिस्टर"
-                                data-mr="नोंदणी">Register</a></li>
+
+
+                        <li>
+                            <a
+                                href="{{ url_for('auth.register') }}"
+                                data-en="Register"
+                                data-hi="रजिस्टर"
+                                data-mr="नोंदणी"
+                            >
+                                Register
+                            </a>
+                        </li>
 
                     </ul>
+
                 </div>
 
-                <!-- Contact Column (Sirf email aur phone) -->
+
+                <!-- CONTACT -->
                 <div class="footer-contact">
-                    <h3 class="footer-heading" data-en="Contact" data-hi="संपर्क करें" data-mr="संपर्क">Contact</h3>
+
+                    <h3
+                        class="footer-heading"
+                        data-en="Contact"
+                        data-hi="संपर्क करें"
+                        data-mr="संपर्क"
+                    >
+                        Contact
+                    </h3>
+
                     <ul>
-                        <li><a href="mailto:hello@mittisemandi.in">hello@mittisemandi.in</a></li>
-                        <li><a href="tel:+919876543210">+91 98765 43210</a></li>
+
+                        <li>
+                            <a href="mailto:hello@mittisemandi.in">
+                                hello@mittisemandi.in
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="tel:+919876543210">
+                                +91 98765 43210
+                            </a>
+                        </li>
+
                     </ul>
+
                 </div>
 
+
+                <!-- FOOTER BOTTOM -->
                 <div class="footer-bottom">
-                    <p data-en="&copy; 2026 Mitti Se Mandi." data-hi="&copy; 2026 मिट्टी से मंडी।"
-                        data-mr="&copy; 2026 मिट्टी से मंडी.">&copy; 2026 Mitti Se Mandi.</p>
-                    <p data-en="All rights reserved." data-hi="सर्वाधिकार सुरक्षित।" data-mr="सर्व हक्क राखीव.">All
-                        rights reserved.</p>
+
+                    <p
+                        data-en="&copy; 2026 Mitti Se Mandi."
+                        data-hi="&copy; 2026 मिट्टी से मंडी।"
+                        data-mr="&copy; 2026 मिट्टी से मंडी."
+                    >
+                        &copy; 2026 Mitti Se Mandi.
+                    </p>
+
+
+                    <p
+                        data-en="All rights reserved."
+                        data-hi="सर्वाधिकार सुरक्षित।"
+                        data-mr="सर्व हक्क राखीव."
+                    >
+                        All rights reserved.
+                    </p>
+
                 </div>
+
             </div>
+
+        </div>
+
     </footer>
 
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    <!-- MAIN JAVASCRIPT -->
+    <script
+        src="{{ url_for('static', filename='js/script.js') }}"
+    ></script>
+
 </body>
 
 </html>

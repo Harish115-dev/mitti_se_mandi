@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Mitti Se Mandi — Find Buyers
+    </title>
+
+    <link rel="stylesheet" href="{{ url_for(
+            'static',
+            filename='css/farmer_buyer_requirements.css'
+        ) }}">
+
+
+
+
+
+</head>
+
+<body>
+
+    <div class="page">
+
+
+
+        <main class="main">
+
+            <div class="topbar">
+
+                <div>
+
+                    <div class="eyebrow">
+                        BUYER MARKETPLACE
+                    </div>
+
+                    <h1>
+                        Find Buyers
+                    </h1>
+
+                    <p>
+                        Discover active buyer requirements that
+                        may match your crops.
+                    </p>
+
+                </div>
+
+
+                <div class="farmer-box">
+
+                    <strong>
+                        {{ farmer.full_name }}
+                    </strong>
+
+                    <span>
+                        {{ farmer.city or "" }}
+                        {% if farmer.city and farmer.state %}
+                        ,
+                        {% endif %}
+                        {{ farmer.state or "" }}
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             SUMMARY
+        ================================================== -->
+
+            <div class="summary-grid">
+
+                <div class="summary-card">
+
+                    <span>
+                        Active Buyer Requirements
+                    </span>
+
+                    <strong>
+                        {{ requirements|length }}
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        Matching Crops
+                    </span>
+
+                    <strong>
+                        {{
+                        requirements
+                        | selectattr(
+                        "matched_crop",
+                        "ne",
+                        none
+                        )
+                        | list
+                        | length
+                        }}
+                    </strong>
+
+                </div>
+
+
+                <div class="summary-card">
+
+                    <span>
+                        Full Matches
+                    </span>
+
+                    <strong>
+
+                        {{
+                        requirements
+                        | selectattr(
+                        "match_status",
+                        "equalto",
+                        "Full Match"
+                        )
+                        | list
+                        | length
+                        }}
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+             BUYER REQUIREMENTS
+        ================================================== -->
+
+            {% if requirements %}
+
+            <div class="requirements">
+
+                {% for requirement in requirements %}
+
+                <article class="buyer-card">
+
+
+                    <!-- HEADER -->
+                    <div class="card-header">
+
+                        <div>
+
+                            <span class="crop-tag">
+                                {{ requirement.crop_name }}
+                            </span>
+
+                            <h2>
+                                {{ requirement.buyer_name }}
+                            </h2>
+
+                            {% if requirement.business_name %}
+
+                            <p>
+                                {{ requirement.business_name }}
+                            </p>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="
+                                    match-status
+
+                                    {% if requirement.match_status == 'Full Match' %}
+                                        full
+
+                                    {% elif requirement.match_status == 'Partial Match' %}
+                                        partial
+
+                                    {% elif requirement.match_status == 'Different Crop' %}
+                                        different
+
+                                    {% else %}
+                                        low
+                                    {% endif %}
+                                ">
+
+                            {% if requirement.match_status == "Different Crop" %}
+
+                            Different Crop
+
+                            {% else %}
+
+                            {{ requirement.match_percentage }}%
+                            {{ requirement.match_status }}
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- REQUIREMENT DETAILS -->
+                    <div class="facts">
+
+
+                        <div class="fact">
+
+                            <span>
+                                Quantity
+                            </span>
+
+                            <strong>
+
+                                {% if requirement.min_quantity is not none %}
+                                {{ requirement.min_quantity }}
+                                {% endif %}
+
+                                {% if requirement.max_quantity is not none %}
+                                – {{ requirement.max_quantity }}
+                                {% endif %}
+
+                                {{ requirement.quantity_unit }}
+
+                            </strong>
+
+                        </div>
+
+
+                        <div class="fact">
+
+                            <span>
+                                Required Grade
+                            </span>
+
+                            <strong>
+                                {{ requirement.required_grade or "Any" }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="fact">
+
+                            <span>
+                                Preferred Location
+                            </span>
+
+                            <strong>
+                                {{ requirement.preferred_location or "Any" }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="fact">
+
+                            <span>
+                                Maximum Price
+                            </span>
+
+                            <strong>
+
+                                {% if requirement.max_price is not none %}
+
+                                ₹{{ "%.2f"|format(
+                                requirement.max_price
+                                ) }}
+
+                                {% else %}
+
+                                Any
+
+                                {% endif %}
+
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- FARMER CROP -->
+                    {% if requirement.matched_crop %}
+
+                    <div class="your-crop">
+
+                        <div class="your-crop-title">
+                            Your Matching Crop
+                        </div>
+
+
+                        <div class="your-crop-grid">
+
+                            <div>
+
+                                <span>
+                                    Crop
+                                </span>
+
+                                <strong>
+                                    {{ requirement.matched_crop.crop_name }}
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Quantity
+                                </span>
+
+                                <strong>
+
+                                    {{ requirement.matched_crop.quantity }}
+
+                                    {{ requirement.matched_crop.quantity_unit }}
+
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Grade
+                                </span>
+
+                                <strong>
+                                    {{ requirement.matched_crop.grade or "—" }}
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Expected Price
+                                </span>
+
+                                <strong>
+
+                                    ₹{{ requirement.matched_crop.expected_price }}
+
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CHECKS -->
+                    <div class="checks">
+
+                        {% for check in requirement.checks %}
+
+                        <span class="
+                                            check
+
+                                            {% if check.passed %}
+                                                pass
+                                            {% else %}
+                                                fail
+                                            {% endif %}
+                                        ">
+
+                            {% if check.passed %}
+                            ✓
+                            {% else %}
+                            ×
+                            {% endif %}
+
+                            {{ check.name }}
+
+                        </span>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="note">
+
+                        {% if requirement.match_status == "Full Match" %}
+
+                        This buyer requirement matches your
+                        crop across all current criteria.
+
+                        {% elif requirement.match_status == "Partial Match" %}
+
+                        Some requirements differ, but this
+                        buyer may still be a potential customer.
+
+                        {% else %}
+
+                        The current crop does not satisfy
+                        the selected buyer criteria.
+
+                        {% endif %}
+
+                    </div>
+
+                    {% else %}
+
+                    <div class="different-crop">
+
+                        This buyer is currently looking for
+                        <strong>
+                            {{ requirement.crop_name }}
+                        </strong>.
+
+                        You do not currently have this crop
+                        listed.
+
+                    </div>
+
+                    {% endif %}
+
+
+                </article>
+
+                {% endfor %}
+
+            </div>
+
+            {% else %}
+
+            <div class="empty">
+
+                <h2>
+                    No active buyer requirements
+                </h2>
+
+                <p>
+                    Buyer requirements will appear here when
+                    buyers start sourcing produce.
+                </p>
+
+            </div>
+
+            {% endif %}
+
+        </main>
+
+    </div>
+
+</body>
+
+</html>

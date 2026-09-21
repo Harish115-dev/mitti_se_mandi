@@ -1,82 +1,116 @@
-/* =========================================
-   FARMER DASHBOARD - FLASK VERSION
-   Uses real Flask APIs instead of PHP/static mock data.
-   ========================================= */
 
 (function () {
     "use strict";
 
+
+    /* =====================================================
+       SERVER DATA
+    ====================================================== */
+
     const farmer = window.farmerData || {};
-    const crops = Array.isArray(window.myCrops) ? window.myCrops : [];
+
+    const crops = Array.isArray(window.myCrops)
+        ? window.myCrops
+        : [];
+
+
+    /* =====================================================
+       NAVIGATION
+    ====================================================== */
 
     const nav = {
-    dashboard: {
-        label: "Dashboard",
-        view: "dashboard"
-    },
 
-    "my-crops": {
-        label: "My Crops",
-        view: "my-crops"
-    },
+        dashboard: {
+            label: "Dashboard",
+            view: "dashboard"
+        },
 
-    "market-prices": {
-        label: "Market Prices",
-        view: "market-prices"
-    },
+        "my-crops": {
+            label: "My Crops",
+            view: "my-crops"
+        },
 
-    buyers: {
+        "market-prices": {
+            label: "Market Prices",
+            view: "market-prices"
+        },
+
+         buyers: {
         label: "Buyers",
-        view: "buyers"
-    },
+        externalUrl: "/buyer-requirements/farmer"
+        },
 
-    offers: {
-        label: "Offers",
-        externalUrl: "/offers/farmer"
-    },
+        offers: {
+            label: "Offers",
+            externalUrl: "/offers/farmer"
+        },
 
-    orders: {
-        label: "Orders",
-        view: "orders"
-    },
+        orders: {
+            label: "Orders",
+            externalUrl: "/transactions/farmer"
+        },
 
-    profile: {
-        label: "Profile",
-        view: "profile"
-    }
-};
+        profile: {
+            label: "Profile",
+            view: "profile"
+        }
+    };
+
 
     const viewToGroup = {
+
         dashboard: "dashboard",
+
         "my-crops": "my-crops",
+
         "market-prices": "market-prices",
+
         buyers: "buyers",
+
         "buyer-requests": "buyers",
+
         orders: "orders",
+
         profile: "profile",
-        "edit-profile": "profile",
+
+        "edit-profile": "profile"
     };
+
 
     let activeGroup = "dashboard";
 
-    const $ = (id) => document.getElementById(id);
+
+    /* =====================================================
+       HELPERS
+    ====================================================== */
+
+    const $ = (id) => {
+        return document.getElementById(id);
+    };
+
 
     function toast(message) {
-        const el = $("toast");
 
-        if (!el) return;
+        const element = $("toast");
 
-        el.textContent = message;
-        el.classList.add("show");
+        if (!element) {
+            return;
+        }
 
-        clearTimeout(el._timer);
+        element.textContent = message;
 
-        el._timer = setTimeout(() => {
-            el.classList.remove("show");
+        element.classList.add("show");
+
+        clearTimeout(element._timer);
+
+        element._timer = setTimeout(() => {
+            element.classList.remove("show");
         }, 2200);
     }
 
+
     function formatMoney(value) {
+
         const number = Number(value);
 
         if (!Number.isFinite(number)) {
@@ -84,28 +118,35 @@
         }
 
         return `₹${number.toLocaleString("en-IN", {
-            maximumFractionDigits: 2,
+            maximumFractionDigits: 2
         })}`;
     }
 
+
     function initials(name) {
+
         return (
             String(name || "Farmer")
                 .split(/\s+/)
                 .filter(Boolean)
                 .slice(0, 2)
                 .map((word) => word[0].toUpperCase())
-                .join("") || "F"
+                .join("")
+            || "F"
         );
     }
 
+
     function normalizedStatus(status) {
+
         return String(status || "")
             .trim()
             .toLowerCase();
     }
 
+
     function cropStatusClass(status) {
+
         const normalized = normalizedStatus(status);
 
         if (normalized === "available") {
@@ -120,240 +161,652 @@
     }
 
 
-    /* =========================================
-       NAVIGATION
-    ========================================= */
+    function escapeHtml(value) {
 
-    function renderNav() {
-    const navList = $("navList");
+        const element = document.createElement("div");
 
-    if (!navList) {
-        return;
+        element.textContent = String(value ?? "");
+
+        return element.innerHTML;
     }
 
-    navList.innerHTML = "";
 
-    Object.entries(nav).forEach(([key, item]) => {
+    /* =====================================================
+       NAVIGATION
+    ====================================================== */
 
-        const li = document.createElement("li");
-        const button = document.createElement("button");
+    function renderNav() {
 
-        button.className =
-            `nav-btn${key === activeGroup ? " active" : ""}`;
+        const navList = $("navList");
 
-        button.textContent = item.label;
+        if (!navList) {
+            return;
+        }
 
-        button.addEventListener("click", () => {
+        navList.innerHTML = "";
 
-            if (item.externalUrl) {
-                window.location.href = item.externalUrl;
-                return;
-            }
 
-            activeGroup = key;
-            goTo(item.view);
+        Object.entries(nav).forEach(([key, item]) => {
+
+            const li = document.createElement("li");
+
+            const button = document.createElement("button");
+
+            button.type = "button";
+
+            button.className =
+                `nav-btn${key === activeGroup ? " active" : ""}`;
+
+            button.textContent = item.label;
+
+
+            button.addEventListener("click", () => {
+
+                /* External Flask route */
+                if (item.externalUrl) {
+
+                    window.location.href =
+                        item.externalUrl;
+
+                    return;
+                }
+
+
+                activeGroup = key;
+
+                goTo(item.view);
+            });
+
+
+            li.appendChild(button);
+
+            navList.appendChild(li);
         });
+    }
 
-        li.appendChild(button);
-        navList.appendChild(li);
-    });
-}
+
     function goTo(viewId) {
-        document.querySelectorAll(".view").forEach((view) => {
-            view.classList.remove("active");
-        });
+
+        document
+            .querySelectorAll(".view")
+            .forEach((view) => {
+                view.classList.remove("active");
+            });
+
 
         const target = $(`view-${viewId}`);
 
-        if (target) {
-            target.classList.add("active");
-        }
 
-        activeGroup = viewToGroup[viewId] || viewId;
-
-        renderNav();
-
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth",
-        });
-    }
-
-    function bindNavigation() {
-        document.querySelectorAll("[data-nav]").forEach((element) => {
-            element.addEventListener("click", () => {
-                const target = element.getAttribute("data-nav");
-
-                if (target) {
-                    goTo(target);
-                }
-            });
-        });
-    }
-
-
-    /* =========================================
-       HEADER
-    ========================================= */
-
-    function renderHeader() {
-        const name = farmer.full_name || "Farmer";
-
-        const firstName =
-            name.split(/\s+/)[0] || "Farmer";
-
-        const avatar = initials(name).slice(0, 2);
-
-        if ($("topAv")) {
-            $("topAv").textContent = avatar;
-        }
-
-        if ($("topName")) {
-            $("topName").textContent = name;
-        }
-
-        if ($("greeting")) {
-            $("greeting").textContent =
-                `Good Day, ${firstName}!`;
-        }
-
-        if ($("weatherPlace")) {
-            $("weatherPlace").textContent =
-                [farmer.city, farmer.state]
-                    .filter(Boolean)
-                    .join(", ") || "Your location";
-        }
-    }
-
-
-    /* =========================================
-       DASHBOARD STATS
-    ========================================= */
-
-    function renderDashboardStats() {
-        const totalCrops = crops.length;
-
-        const activeListings = crops.filter(
-            (crop) =>
-                normalizedStatus(crop.status) === "available"
-        ).length;
-
-        if (!$("statGrid")) return;
-
-        $("statGrid").innerHTML = `
-            <div class="stat-card">
-                <div class="stat-label">Total Crops</div>
-                <div class="stat-value">${totalCrops}</div>
-                <div class="stat-note">
-                    Currently listed
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-label">Active Listings</div>
-                <div class="stat-value">${activeListings}</div>
-                <div class="stat-note">
-                    Available for sale
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-label">Pending Orders</div>
-                <div class="stat-value">0</div>
-                <div class="stat-note">
-                    Marketplace phase
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-label">Total Sales</div>
-                <div class="stat-value">—</div>
-                <div class="stat-note">
-                    Transactions phase
-                </div>
-            </div>
-        `;
-    }
-
-
-    /* =========================================
-       DASHBOARD CROP PREVIEW
-    ========================================= */
-
-    function renderDashboardCrops() {
-        if (!$("dashCropList")) return;
-
-        if (!crops.length) {
-            $("dashCropList").innerHTML =
-                `<div class="empty">No crops listed yet.</div>`;
+        if (!target) {
+            console.warn(
+                `Dashboard view not found: ${viewId}`
+            );
 
             return;
         }
 
-        $("dashCropList").innerHTML =
-            crops.slice(0, 3).map((crop) => {
 
-                const status =
-                    normalizedStatus(crop.status);
+        target.classList.add("active");
 
-                const canPublish =
-                    status === "available" &&
-                    crop.id;
 
-                return `
-                    <div class="crop-row">
+        activeGroup =
+            viewToGroup[viewId] || viewId;
 
-                        <div>
 
-                            <div class="crop-name">
-                                ${escapeHtml(
-                                    crop.crop_name || "Crop"
-                                )}
+        renderNav();
+
+
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+
+
+        /* Close mobile sidebar */
+        const sidebar =
+            document.querySelector(".sidebar");
+
+        if (sidebar) {
+            sidebar.classList.remove("collapsed");
+        }
+
+
+        const menuToggle =
+            $("menuToggle");
+
+        if (menuToggle) {
+            menuToggle.classList.remove("active");
+        }
+    }
+
+
+    function bindNavigation() {
+
+        document
+            .querySelectorAll("[data-nav]")
+            .forEach((element) => {
+
+                element.addEventListener(
+                    "click",
+                    () => {
+
+                        const target =
+                            element.getAttribute(
+                                "data-nav"
+                            );
+
+                        if (target) {
+                            goTo(target);
+                        }
+                    }
+                );
+
+            });
+    }
+
+
+    /* =====================================================
+       HEADER
+    ====================================================== */
+
+    function renderHeader() {
+
+        const name =
+            farmer.full_name || "Farmer";
+
+
+        const firstName =
+            name.split(/\s+/)[0] || "Farmer";
+
+
+        const avatar =
+            initials(name).slice(0, 2);
+
+
+        if ($("topAv")) {
+
+            $("topAv").textContent =
+                avatar;
+        }
+
+
+        if ($("topName")) {
+
+            $("topName").textContent =
+                name;
+        }
+
+
+        if ($("greeting")) {
+
+            $("greeting").textContent =
+                `Good Day, ${firstName}!`;
+        }
+
+
+        if ($("weatherPlace")) {
+
+            const location = [
+                farmer.city,
+                farmer.state
+            ]
+                .filter(Boolean)
+                .join(", ");
+
+
+            $("weatherPlace").textContent =
+                location || "Your location";
+        }
+    }
+
+
+    /* =====================================================
+       DASHBOARD STATS
+    ====================================================== */
+
+    function renderDashboardStats() {
+
+        const totalCrops =
+            crops.length;
+
+
+        const activeListings =
+            crops.filter(
+                (crop) =>
+                    normalizedStatus(
+                        crop.status
+                    ) === "available"
+            ).length;
+
+
+        const listedCrops =
+            crops.filter(
+                (crop) =>
+                    normalizedStatus(
+                        crop.status
+                    ) === "listed"
+            ).length;
+
+
+        if (!$("statGrid")) {
+            return;
+        }
+
+
+        $("statGrid").innerHTML = `
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    Total Crops
+                </div>
+
+                <div class="stat-value">
+                    ${totalCrops}
+                </div>
+
+                <div class="stat-note">
+                    Currently recorded
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    Available Crops
+                </div>
+
+                <div class="stat-value">
+                    ${activeListings}
+                </div>
+
+                <div class="stat-note">
+                    Available for marketplace
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    Published Listings
+                </div>
+
+                <div class="stat-value">
+                    ${listedCrops}
+                </div>
+
+                <div class="stat-note">
+                    Currently on marketplace
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-label">
+                    Total Sales
+                </div>
+
+                <div class="stat-value">
+                    —
+                </div>
+
+                <div class="stat-note">
+                    Transaction phase
+                </div>
+
+            </div>
+
+        `;
+    }
+
+
+    /* =====================================================
+       DASHBOARD CROP PREVIEW
+    ====================================================== */
+
+    function renderDashboardCrops() {
+
+        const container =
+            $("dashCropList");
+
+
+        if (!container) {
+            return;
+        }
+
+
+        if (!crops.length) {
+
+            container.innerHTML = `
+                <div class="empty">
+                    No crops listed yet.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        container.innerHTML =
+            crops
+                .slice(0, 3)
+                .map((crop) => {
+
+                    const status =
+                        normalizedStatus(
+                            crop.status
+                        );
+
+
+                    const canPublish =
+                        status === "available" &&
+                        crop.id;
+
+
+                    return `
+
+                        <div class="crop-row">
+
+                            <div>
+
+                                <div class="crop-name">
+                                    ${escapeHtml(
+                                        crop.crop_name ||
+                                        "Crop"
+                                    )}
+                                </div>
+
+                                <div class="crop-meta">
+
+                                    ${escapeHtml(
+                                        String(
+                                            crop.quantity ??
+                                            "—"
+                                        )
+                                    )}
+
+                                    Quintal
+
+                                    ·
+
+                                    ${escapeHtml(
+                                        crop.grade ||
+                                        "Not graded"
+                                    )}
+
+                                </div>
+
                             </div>
 
-                            <div class="crop-meta">
-                                ${escapeHtml(
-                                    String(
-                                        crop.quantity ?? "—"
-                                    )
-                                )}
-                                Quintal
-                                ·
-                                ${escapeHtml(
-                                    crop.grade ||
-                                    "Not graded"
-                                )}
+
+                            <div style="text-align:right;">
+
+                                <div class="crop-price">
+
+                                    ${formatMoney(
+                                        crop.price
+                                    )}/Quintal
+
+                                </div>
+
+
+                                <span
+                                    class="
+                                        pill
+                                        ${cropStatusClass(
+                                            crop.status
+                                        )}
+                                    "
+                                >
+
+                                    ${escapeHtml(
+                                        crop.status ||
+                                        "Unknown"
+                                    )}
+
+                                </span>
+
+
+                                ${
+                                    canPublish
+
+                                        ? `
+
+                                            <div
+                                                style="
+                                                    margin-top:8px;
+                                                "
+                                            >
+
+                                                <form
+                                                    action="/lots/publish/${encodeURIComponent(
+                                                        crop.id
+                                                    )}"
+                                                    method="POST"
+                                                    onsubmit="
+                                                        return confirm(
+                                                            'Publish this crop to the marketplace?'
+                                                        );
+                                                    "
+                                                >
+
+                                                    <button
+                                                        type="submit"
+                                                        class="btn btn-primary btn-small"
+                                                    >
+                                                        Publish
+                                                    </button>
+
+                                                </form>
+
+                                            </div>
+
+                                        `
+
+                                        : ""
+
+                                }
+
                             </div>
 
                         </div>
 
+                    `;
+                })
+                .join("");
+    }
 
-                        <div style="text-align:right;">
 
-                            <div class="crop-price">
-                                ${formatMoney(crop.price)}/Quintal
+    /* =====================================================
+       MY CROPS
+    ====================================================== */
+
+    function renderCrops(filter = "") {
+
+        const grid =
+            $("cropGrid");
+
+
+        if (!grid) {
+            return;
+        }
+
+
+        const query =
+            filter.trim().toLowerCase();
+
+
+        const filtered =
+            crops.filter((crop) => {
+
+                const cropName =
+                    String(
+                        crop.crop_name || ""
+                    )
+                        .toLowerCase();
+
+
+                return cropName.includes(query);
+            });
+
+
+        if (!filtered.length) {
+
+            grid.innerHTML = `
+                <div class="empty">
+                    No crops match your search.
+                </div>
+            `;
+
+            return;
+        }
+
+
+        grid.innerHTML =
+            filtered
+                .map((crop) => {
+
+                    const status =
+                        normalizedStatus(
+                            crop.status
+                        );
+
+
+                    const canPublish =
+                        status === "available" &&
+                        crop.id;
+
+
+                    return `
+
+                        <div class="crop-tile">
+
+                            <!-- HEADER -->
+
+                            <div class="ct-top">
+
+                                <span class="crop-badge">
+
+                                    ${escapeHtml(
+                                        String(
+                                            crop.crop_name ||
+                                            "C"
+                                        )
+                                            .charAt(0)
+                                            .toUpperCase()
+                                    )}
+
+                                </span>
+
+
+                                <span
+                                    class="
+                                        pill
+                                        ${cropStatusClass(
+                                            crop.status
+                                        )}
+                                    "
+                                >
+
+                                    ${escapeHtml(
+                                        crop.status ||
+                                        "Unknown"
+                                    )}
+
+                                </span>
+
                             </div>
 
 
-                            <span
-                                class="
-                                    pill
-                                    ${cropStatusClass(crop.status)}
-                                "
-                            >
-                                ${escapeHtml(
-                                    crop.status ||
-                                    "Unknown"
-                                )}
-                            </span>
+                            <!-- NAME -->
 
+                            <div class="ct-name">
+
+                                ${escapeHtml(
+                                    crop.crop_name ||
+                                    "Crop"
+                                )}
+
+                            </div>
+
+
+                            <!-- QUANTITY -->
+
+                            <div class="ct-row">
+
+                                <span>
+                                    Quantity
+                                </span>
+
+                                <span>
+
+                                    ${escapeHtml(
+                                        String(
+                                            crop.quantity ??
+                                            "—"
+                                        )
+                                    )}
+
+                                    Quintal
+
+                                </span>
+
+                            </div>
+
+
+                            <!-- GRADE -->
+
+                            <div class="ct-row">
+
+                                <span>
+                                    Grade
+                                </span>
+
+                                <span>
+
+                                    ${escapeHtml(
+                                        crop.grade ||
+                                        "—"
+                                    )}
+
+                                </span>
+
+                            </div>
+
+
+                            <!-- PRICE -->
+
+                            <div class="ct-row">
+
+                                <span>
+                                    Price
+                                </span>
+
+                                <span>
+
+                                    ${formatMoney(
+                                        crop.price
+                                    )}/Quintal
+
+                                </span>
+
+                            </div>
+
+
+                            <!-- MARKETPLACE ACTION -->
 
                             ${
                                 canPublish
+
                                     ? `
-                                        <div
-                                            style="margin-top:8px;"
-                                        >
+
+                                        <div class="ct-actions">
 
                                             <form
                                                 action="/lots/publish/${encodeURIComponent(
@@ -371,255 +824,85 @@
                                                     type="submit"
                                                     class="btn btn-primary btn-small"
                                                 >
-                                                    Publish
+                                                    Publish to Marketplace
                                                 </button>
 
                                             </form>
 
                                         </div>
-                                      `
-                                    : ""
+
+                                    `
+
+                                    : `
+
+                                        <div class="ct-actions">
+
+                                            <span
+                                                class="marketplace-state"
+                                            >
+
+                                                ${
+                                                    status ===
+                                                    "listed"
+
+                                                        ? "Published on marketplace"
+
+                                                        : status ===
+                                                          "sold"
+
+                                                            ? "Crop sold"
+
+                                                            : status ===
+                                                              "inactive"
+
+                                                                ? "Inactive"
+
+                                                                : "Unavailable"
+                                                }
+
+                                            </span>
+
+                                        </div>
+
+                                    `
                             }
 
                         </div>
 
-                    </div>
-                `;
-            }).join("");
+                    `;
+                })
+                .join("");
     }
 
 
-    /* =========================================
-       MY CROPS
-    ========================================= */
+    /* =====================================================
+       PROFILE
+    ====================================================== */
 
-    function renderCrops(filter = "") {
-        if (!$("cropGrid")) return;
+    function renderProfile() {
 
-        const query =
-            filter.trim().toLowerCase();
+        const profile =
+            $("profileView");
 
-        const filtered =
-            crops.filter((crop) =>
-                String(
-                    crop.crop_name || ""
-                )
-                    .toLowerCase()
-                    .includes(query)
-            );
 
-        const grid = $("cropGrid");
-
-        if (!filtered.length) {
-            grid.innerHTML =
-                `<div class="empty">
-                    No crops match your search.
-                </div>`;
-
+        if (!profile) {
             return;
         }
 
-        grid.innerHTML =
-            filtered.map((crop) => {
 
-                const status =
-                    normalizedStatus(crop.status);
+        const location = [
+            farmer.city,
+            farmer.state
+        ]
+            .filter(Boolean)
+            .join(", ") || "Not set";
 
-                const canPublish =
-                    status === "available" &&
-                    crop.id;
-
-                return `
-                    <div class="crop-tile">
-
-
-                        <!-- Crop header -->
-                        <div class="ct-top">
-
-                            <span class="crop-badge">
-
-                                ${escapeHtml(
-                                    String(
-                                        crop.crop_name || "C"
-                                    )
-                                        .charAt(0)
-                                        .toUpperCase()
-                                )}
-
-                            </span>
-
-
-                            <span
-                                class="
-                                    pill
-                                    ${cropStatusClass(crop.status)}
-                                "
-                            >
-                                ${escapeHtml(
-                                    crop.status ||
-                                    "Unknown"
-                                )}
-                            </span>
-
-                        </div>
-
-
-
-                        <!-- Crop name -->
-                        <div class="ct-name">
-
-                            ${escapeHtml(
-                                crop.crop_name ||
-                                "Crop"
-                            )}
-
-                        </div>
-
-
-
-                        <!-- Quantity -->
-                        <div class="ct-row">
-
-                            <span>
-                                Quantity
-                            </span>
-
-                            <span>
-
-                                ${escapeHtml(
-                                    String(
-                                        crop.quantity ?? "—"
-                                    )
-                                )}
-
-                                Quintal
-
-                            </span>
-
-                        </div>
-
-
-
-                        <!-- Grade -->
-                        <div class="ct-row">
-
-                            <span>
-                                Grade
-                            </span>
-
-                            <span>
-
-                                ${escapeHtml(
-                                    crop.grade || "—"
-                                )}
-
-                            </span>
-
-                        </div>
-
-
-
-                        <!-- Price -->
-                        <div class="ct-row">
-
-                            <span>
-                                Price
-                            </span>
-
-                            <span>
-
-                                ${formatMoney(
-                                    crop.price
-                                )}/Quintal
-
-                            </span>
-
-                        </div>
-
-
-
-                        <!-- Marketplace action -->
-                        ${
-                            canPublish
-                                ? `
-                                    <div class="ct-actions">
-
-                                        <form
-                                            action="/lots/publish/${encodeURIComponent(
-                                                crop.id
-                                            )}"
-                                            method="POST"
-                                            onsubmit="
-                                                return confirm(
-                                                    'Publish this crop to the marketplace?'
-                                                );
-                                            "
-                                        >
-
-                                            <button
-                                                type="submit"
-                                                class="btn btn-primary btn-small"
-                                            >
-                                                Publish to Marketplace
-                                            </button>
-
-                                        </form>
-
-                                    </div>
-                                  `
-                                : `
-                                    <div class="ct-actions">
-
-                                        <span
-                                            class="marketplace-state"
-                                        >
-
-                                            ${
-                                                status ===
-                                                "pending"
-
-                                                    ? "Marketplace processing"
-
-                                                    : status ===
-                                                      "sold"
-
-                                                        ? "Crop sold"
-
-                                                        : "Unavailable"
-                                            }
-
-                                        </span>
-
-                                    </div>
-                                  `
-                        }
-
-                    </div>
-                `;
-            }).join("");
-    }
-
-
-    /* =========================================
-       PROFILE
-    ========================================= */
-
-    function renderProfile() {
-        if (!$("profileView")) return;
-
-        const location =
-            [
-                farmer.city,
-                farmer.state
-            ]
-                .filter(Boolean)
-                .join(", ") ||
-            "Not set";
 
         const initialsText =
             initials(farmer.full_name);
 
-        $("profileView").innerHTML = `
+
+        profile.innerHTML = `
 
             <div class="p-av">
                 ${escapeHtml(initialsText)}
@@ -627,69 +910,108 @@
 
 
             <div class="p-row">
-                <span>Name</span>
+
+                <span>
+                    Name
+                </span>
+
                 <span>
                     ${escapeHtml(
-                        farmer.full_name || "—"
+                        farmer.full_name ||
+                        "—"
                     )}
                 </span>
+
             </div>
 
 
             <div class="p-row">
-                <span>Email</span>
+
+                <span>
+                    Email
+                </span>
+
                 <span>
                     ${escapeHtml(
-                        farmer.email || "—"
+                        farmer.email ||
+                        "—"
                     )}
                 </span>
+
             </div>
 
 
             <div class="p-row">
-                <span>Village / District</span>
+
                 <span>
-                    ${escapeHtml(location)}
+                    Village / District
                 </span>
-            </div>
 
-
-            <div class="p-row">
-                <span>Phone</span>
                 <span>
                     ${escapeHtml(
-                        farmer.phone || "—"
+                        location
                     )}
                 </span>
+
             </div>
 
 
             <div class="p-row">
-                <span>Crops grown</span>
+
+                <span>
+                    Phone
+                </span>
+
+                <span>
+                    ${escapeHtml(
+                        farmer.phone ||
+                        "—"
+                    )}
+                </span>
+
+            </div>
+
+
+            <div class="p-row">
+
+                <span>
+                    Crops grown
+                </span>
+
                 <span>
                     ${escapeHtml(
                         farmer.crops ||
                         "Not set"
                     )}
                 </span>
+
             </div>
 
 
             <div class="p-row">
-                <span>Land size</span>
+
+                <span>
+                    Land size
+                </span>
+
                 <span>
                     ${escapeHtml(
                         String(
-                            farmer.land_size ||
+                            farmer.land_size ??
                             "Not set"
                         )
                     )}
                 </span>
+
             </div>
 
 
             <div class="p-row">
-                <span>Member since</span>
+
+                <span>
+                    Member since
+                </span>
+
                 <span>
                     ${escapeHtml(
                         String(
@@ -698,6 +1020,7 @@
                         )
                     )}
                 </span>
+
             </div>
 
 
@@ -706,19 +1029,21 @@
                 <button
                     class="btn btn-primary"
                     data-nav="edit-profile"
+                    type="button"
                 >
                     Edit Profile
                 </button>
 
             </div>
+
         `;
 
 
         const editButton =
-            $("profileView")
-                .querySelector(
-                    "[data-nav]"
-                );
+            profile.querySelector(
+                "[data-nav='edit-profile']"
+            );
+
 
         if (editButton) {
 
@@ -728,23 +1053,30 @@
                     goTo("edit-profile");
                 }
             );
-
         }
     }
 
 
     function renderEditProfile() {
-        if (!$("profileEdit")) return;
 
-        const location =
-            [
-                farmer.city,
-                farmer.state
-            ]
-                .filter(Boolean)
-                .join(", ");
+        const profileEdit =
+            $("profileEdit");
 
-        $("profileEdit").innerHTML = `
+
+        if (!profileEdit) {
+            return;
+        }
+
+
+        const location = [
+            farmer.city,
+            farmer.state
+        ]
+            .filter(Boolean)
+            .join(", ");
+
+
+        profileEdit.innerHTML = `
 
             <div class="field">
 
@@ -754,7 +1086,8 @@
 
                 <input
                     value="${escapeHtml(
-                        farmer.full_name || ""
+                        farmer.full_name ||
+                        ""
                     )}"
                     disabled
                 >
@@ -786,7 +1119,8 @@
 
                 <input
                     value="${escapeHtml(
-                        farmer.phone || ""
+                        farmer.phone ||
+                        ""
                     )}"
                     disabled
                 >
@@ -802,7 +1136,8 @@
 
                 <input
                     value="${escapeHtml(
-                        farmer.email || ""
+                        farmer.email ||
+                        ""
                     )}"
                     disabled
                 >
@@ -814,30 +1149,34 @@
                 class="empty"
                 style="padding:20px 0 0;"
             >
-
-                Profile editing will be added
-                with the backend profile-update route.
-
+                Profile editing will be added with
+                the backend profile-update route.
             </div>
+
         `;
     }
 
 
-    /* =========================================
+    /* =====================================================
        MARKET API
-    ========================================= */
+    ====================================================== */
 
     async function loadMarkets() {
 
         const marketSelect =
             $("marketSelect");
 
-        if (!marketSelect) return;
 
-        marketSelect.innerHTML =
-            `<option value="">
+        if (!marketSelect) {
+            return;
+        }
+
+
+        marketSelect.innerHTML = `
+            <option value="">
                 Loading markets...
-            </option>`;
+            </option>
+        `;
 
 
         try {
@@ -846,6 +1185,7 @@
                 await fetch(
                     "/api/markets/"
                 );
+
 
             const data =
                 await response.json();
@@ -857,46 +1197,64 @@
                     data.error ||
                     "Failed to load markets"
                 );
-
             }
 
 
-            marketSelect.innerHTML =
-                `<option value="">
+            marketSelect.innerHTML = `
+                <option value="">
                     Select market
-                </option>`;
+                </option>
+            `;
 
 
-            data.markets.forEach(
-                (market) => {
+            const markets =
+                Array.isArray(data.markets)
+                    ? data.markets
+                    : [];
 
-                    const option =
-                        document.createElement(
-                            "option"
-                        );
 
-                    option.value = market;
-                    option.textContent = market;
+            markets.forEach((market) => {
 
-                    marketSelect.appendChild(
-                        option
+                const option =
+                    document.createElement(
+                        "option"
                     );
 
-                }
-            );
+
+                option.value =
+                    market;
+
+
+                option.textContent =
+                    market;
+
+
+                marketSelect.appendChild(
+                    option
+                );
+
+            });
 
         } catch (error) {
 
-            marketSelect.innerHTML =
-                `<option value="">
+            console.error(
+                "Market loading error:",
+                error
+            );
+
+
+            marketSelect.innerHTML = `
+                <option value="">
                     Unable to load markets
-                </option>`;
+                </option>
+            `;
+
 
             if ($("marketError")) {
+
                 $("marketError").textContent =
                     error.message;
             }
-
         }
     }
 
@@ -906,21 +1264,18 @@
         const market =
             $("marketSelect").value;
 
+
         const commoditySelect =
             $("commoditySelect");
+
 
         const button =
             $("loadForecastBtn");
 
 
         commoditySelect.disabled = true;
+
         button.disabled = true;
-
-
-        commoditySelect.innerHTML =
-            `<option value="">
-                Loading commodities...
-            </option>`;
 
 
         $("marketError").textContent = "";
@@ -928,13 +1283,21 @@
 
         if (!market) {
 
-            commoditySelect.innerHTML =
-                `<option value="">
+            commoditySelect.innerHTML = `
+                <option value="">
                     Select market first
-                </option>`;
+                </option>
+            `;
 
             return;
         }
+
+
+        commoditySelect.innerHTML = `
+            <option value="">
+                Loading commodities...
+            </option>
+        `;
 
 
         try {
@@ -957,17 +1320,25 @@
                     data.error ||
                     "Failed to load commodities"
                 );
-
             }
 
 
-            commoditySelect.innerHTML =
-                `<option value="">
+            commoditySelect.innerHTML = `
+                <option value="">
                     Select commodity
-                </option>`;
+                </option>
+            `;
 
 
-            data.commodities.forEach(
+            const commodities =
+                Array.isArray(
+                    data.commodities
+                )
+                    ? data.commodities
+                    : [];
+
+
+            commodities.forEach(
                 (commodity) => {
 
                     const option =
@@ -975,11 +1346,14 @@
                             "option"
                         );
 
+
                     option.value =
                         commodity;
 
+
                     option.textContent =
                         commodity;
+
 
                     commoditySelect.appendChild(
                         option
@@ -989,28 +1363,56 @@
             );
 
 
-            commoditySelect.disabled = false;
+            commoditySelect.disabled =
+                false;
+
+
+            updateForecastButton();
 
         } catch (error) {
 
-            commoditySelect.innerHTML =
-                `<option value="">
+            console.error(
+                "Commodity loading error:",
+                error
+            );
+
+
+            commoditySelect.innerHTML = `
+                <option value="">
                     Unable to load commodities
-                </option>`;
+                </option>
+            `;
+
 
             $("marketError").textContent =
                 error.message;
-
         }
     }
 
 
     function updateForecastButton() {
 
-        $("loadForecastBtn").disabled =
+        const market =
+            $("marketSelect");
+
+
+        const commodity =
+            $("commoditySelect");
+
+
+        const button =
+            $("loadForecastBtn");
+
+
+        if (!market || !commodity || !button) {
+            return;
+        }
+
+
+        button.disabled =
             !(
-                $("marketSelect").value &&
-                $("commoditySelect").value
+                market.value &&
+                commodity.value
             );
     }
 
@@ -1020,8 +1422,10 @@
         const market =
             $("marketSelect").value;
 
+
         const commodity =
             $("commoditySelect").value;
+
 
         const button =
             $("loadForecastBtn");
@@ -1033,9 +1437,13 @@
 
 
         button.disabled = true;
-        button.textContent = "Loading...";
 
-        $("marketError").textContent = "";
+        button.textContent =
+            "Loading...";
+
+
+        $("marketError").textContent =
+            "";
 
 
         try {
@@ -1060,13 +1468,18 @@
                     data.error ||
                     "Failed to generate forecast"
                 );
-
             }
 
 
             renderForecast(data);
 
         } catch (error) {
+
+            console.error(
+                "Forecast error:",
+                error
+            );
+
 
             $("marketError").textContent =
                 error.message;
@@ -1076,27 +1489,34 @@
             button.textContent =
                 "Get Forecast";
 
-            updateForecastButton();
 
+            updateForecastButton();
         }
     }
 
 
-    /* =========================================
+    /* =====================================================
        FORECAST
-    ========================================= */
+    ====================================================== */
 
     function renderForecast(data) {
+
+        if (!data) {
+            return;
+        }
+
 
         const current =
             Number(
                 data.current_price
             );
 
+
         const day7 =
             Number(
-                data.forecast.day_7.price
+                data.forecast?.day_7?.price
             );
+
 
         const change =
             Number(
@@ -1107,392 +1527,535 @@
         $("currentPrice").textContent =
             formatMoney(current);
 
+
         $("reportDate").textContent =
-            `Latest report: ${data.report_date}`;
+            `Latest report: ${
+                data.report_date || "—"
+            }`;
+
 
         $("day7Price").textContent =
             formatMoney(day7);
 
+
         $("day7Date").textContent =
-            data.forecast.day_7.date;
+            data.forecast?.day_7?.date ||
+            "—";
+
 
         $("change7d").textContent =
-            `${
-                change >= 0 ? "+" : ""
-            }${change.toFixed(2)}%`;
+            Number.isFinite(change)
+
+                ? `${
+                    change >= 0
+                        ? "+"
+                        : ""
+                }${change.toFixed(2)}%`
+
+                : "—";
+
 
         $("recommendation").textContent =
-            data.recommendation;
+            data.recommendation ||
+            "NO STRONG SIGNAL";
 
 
-        $("change7d").style.color =
-            change > 0
-                ? "var(--positive)"
-                : change < 0
-                    ? "var(--negative)"
-                    : "var(--ink)";
+        /* Change color */
+
+        if (Number.isFinite(change)) {
+
+            if (change > 0) {
+
+                $("change7d").style.color =
+                    "var(--positive)";
+
+            } else if (change < 0) {
+
+                $("change7d").style.color =
+                    "var(--negative)";
+
+            } else {
+
+                $("change7d").style.color =
+                    "var(--ink)";
+            }
+
+        }
 
 
-        $("recommendation").style.color =
-            data.recommendation === "SELL"
+        /* Recommendation color */
 
-                ? "var(--negative)"
+        if (data.recommendation === "SELL") {
 
-                : data.recommendation === "HOLD"
+            $("recommendation").style.color =
+                "var(--negative)";
 
-                    ? "var(--positive)"
+        } else if (
+            data.recommendation === "HOLD"
+        ) {
 
-                    : "var(--forest)";
+            $("recommendation").style.color =
+                "var(--positive)";
+
+        } else {
+
+            $("recommendation").style.color =
+                "var(--forest)";
+        }
 
 
-        $("dashForecastSummary").innerHTML = `
+        /* Dashboard summary */
 
-            <div class="price-row">
+        if ($("dashForecastSummary")) {
 
-                <div>
+            const changeClass =
+                change >= 0
+                    ? "change-up"
+                    : "change-down";
 
-                    <div class="price-crop">
-                        ${escapeHtml(
-                            data.commodity
-                        )}
+
+            const arrow =
+                change >= 0
+                    ? "▲"
+                    : "▼";
+
+
+            $("dashForecastSummary").innerHTML = `
+
+                <div class="price-row">
+
+                    <div>
+
+                        <div class="price-crop">
+
+                            ${escapeHtml(
+                                data.commodity ||
+                                "Commodity"
+                            )}
+
+                        </div>
+
+
+                        <div class="price-market">
+
+                            ${escapeHtml(
+                                data.market ||
+                                "Market"
+                            )}
+
+                        </div>
+
                     </div>
 
-                    <div class="price-market">
-                        ${escapeHtml(
-                            data.market
-                        )}
+
+                    <div class="price-right">
+
+                        <div class="price-val">
+
+                            ${formatMoney(day7)}
+
+                        </div>
+
+
+                        <div
+                            class="${changeClass}"
+                        >
+
+                            ${arrow}
+
+                            ${Math.abs(
+                                change
+                            ).toFixed(2)}%
+
+                            in 7 days
+
+                        </div>
+
                     </div>
 
                 </div>
 
 
-                <div class="price-right">
+                <div
+                    class="empty"
+                    style="padding:18px 0 0;"
+                >
 
-                    <div class="price-val">
-                        ${formatMoney(day7)}
-                    </div>
+                    Recommendation:
 
-
-                    <div
-                        class="${
-                            change >= 0
-                                ? "change-up"
-                                : "change-down"
-                        }"
-                    >
-
-                        ${
-                            change >= 0
-                                ? "▲"
-                                : "▼"
-                        }
-
-                        ${Math.abs(
-                            change
-                        ).toFixed(2)}%
-
-                        in 7 days
-
-                    </div>
+                    <strong>
+                        ${escapeHtml(
+                            data.recommendation ||
+                            "NO STRONG SIGNAL"
+                        )}
+                    </strong>
 
                 </div>
 
-            </div>
+            `;
+        }
 
 
-            <div
-                class="empty"
-                style="padding:18px 0 0;"
-            >
+        /* Forecast table */
 
-                Recommendation:
-
-                <strong>
-                    ${escapeHtml(
-                        data.recommendation
-                    )}
-                </strong>
-
-            </div>
-
-        `;
+        const forecast =
+            data.forecast || {};
 
 
         $("forecastTable").innerHTML = `
 
             <tr>
-                <th>Day</th>
-                <th>Date</th>
-                <th>Predicted Price</th>
+
+                <th>
+                    Day
+                </th>
+
+                <th>
+                    Date
+                </th>
+
+                <th>
+                    Predicted Price
+                </th>
+
             </tr>
 
-            ${
-                Object.entries(
-                    data.forecast
-                )
-                    .map(
-                        ([day, value]) => `
+
+            ${Object.entries(forecast)
+                .map(
+                    ([day, value]) => {
+
+                        return `
+
                             <tr>
 
                                 <td>
                                     ${escapeHtml(
-                                        day.replace(
-                                            "day_",
-                                            "Day "
-                                        )
+                                        String(day)
+                                            .replace(
+                                                "day_",
+                                                "Day "
+                                            )
                                     )}
                                 </td>
+
 
                                 <td>
                                     ${escapeHtml(
-                                        value.date
+                                        value?.date ||
+                                        "—"
                                     )}
                                 </td>
 
+
                                 <td>
                                     ${formatMoney(
-                                        value.price
+                                        value?.price
                                     )}
                                 </td>
 
                             </tr>
-                        `
-                    )
-                    .join("")
-            }
+
+                        `;
+                    }
+                )
+                .join("")}
 
         `;
     }
 
 
-    /* =========================================
+    /* =====================================================
        CROP MODAL
-    ========================================= */
+    ====================================================== */
 
     function openCropModal() {
 
-        $("cropOverlay")
-            .classList
-            .add("active");
+        const overlay =
+            $("cropOverlay");
 
+
+        if (!overlay) {
+            return;
+        }
+
+
+        overlay.classList.add(
+            "active"
+        );
     }
 
 
     function closeCropModal() {
 
-        $("cropOverlay")
-            .classList
-            .remove("active");
+        const overlay =
+            $("cropOverlay");
 
+
+        if (!overlay) {
+            return;
+        }
+
+
+        overlay.classList.remove(
+            "active"
+        );
     }
 
 
-    /* =========================================
-       HTML ESCAPING
-    ========================================= */
+    /* =====================================================
+       MOBILE MENU
+    ====================================================== */
 
-    function escapeHtml(value) {
+    function toggleMobileMenu() {
 
-        const div =
-            document.createElement(
-                "div"
+        const sidebar =
+            document.querySelector(
+                ".sidebar"
             );
 
-        div.textContent =
-            String(value ?? "");
 
-        return div.innerHTML;
+        const menuToggle =
+            $("menuToggle");
+
+
+        if (!sidebar || !menuToggle) {
+            return;
+        }
+
+
+        sidebar.classList.toggle(
+            "collapsed"
+        );
+
+
+        menuToggle.classList.toggle(
+            "active"
+        );
     }
 
 
-    /* =========================================
-       INITIALIZE
-    ========================================= */
+    /* =====================================================
+       INITIALIZATION
+    ====================================================== */
 
     function init() {
 
+        /* Header */
         renderHeader();
 
+
+        /* Dashboard */
         renderDashboardStats();
 
         renderDashboardCrops();
 
+
+        /* Crops */
         renderCrops();
 
+
+        /* Profile */
         renderProfile();
 
         renderEditProfile();
 
+
+        /* Navigation */
         renderNav();
 
         bindNavigation();
 
 
-        /* Crop search */
+        /* =================================================
+           CROP SEARCH
+        ================================================= */
 
-        if ($("cropSearch")) {
+        const cropSearch =
+            $("cropSearch");
 
-            $("cropSearch")
-                .addEventListener(
-                    "input",
-                    (event) => {
-                        renderCrops(
-                            event.target.value
-                        );
+
+        if (cropSearch) {
+
+            cropSearch.addEventListener(
+                "input",
+                (event) => {
+
+                    renderCrops(
+                        event.target.value
+                    );
+
+                }
+            );
+        }
+
+
+        /* =================================================
+           ADD CROP
+        ================================================= */
+
+        const openAddCrop =
+            $("openAddCrop");
+
+
+        if (openAddCrop) {
+
+            openAddCrop.addEventListener(
+                "click",
+                openCropModal
+            );
+        }
+
+
+        const openAddCrop2 =
+            $("openAddCrop2");
+
+
+        if (openAddCrop2) {
+
+            openAddCrop2.addEventListener(
+                "click",
+                openCropModal
+            );
+        }
+
+
+        /* =================================================
+           CANCEL CROP
+        ================================================= */
+
+        const cancelCrop =
+            $("cancelCrop");
+
+
+        if (cancelCrop) {
+
+            cancelCrop.addEventListener(
+                "click",
+                closeCropModal
+            );
+        }
+
+
+        /* =================================================
+           CLOSE MODAL ON OVERLAY
+        ================================================= */
+
+        const cropOverlay =
+            $("cropOverlay");
+
+
+        if (cropOverlay) {
+
+            cropOverlay.addEventListener(
+                "click",
+                (event) => {
+
+                    if (
+                        event.target ===
+                        cropOverlay
+                    ) {
+
+                        closeCropModal();
                     }
-                );
-
+                }
+            );
         }
 
 
-        /* Add crop buttons */
+        /* =================================================
+           MARKET SELECT
+        ================================================= */
 
-        if ($("openAddCrop")) {
-            $("openAddCrop")
-                .addEventListener(
-                    "click",
-                    openCropModal
-                );
+        const marketSelect =
+            $("marketSelect");
+
+
+        if (marketSelect) {
+
+            marketSelect.addEventListener(
+                "change",
+                loadCommodities
+            );
         }
 
 
-        if ($("openAddCrop2")) {
-            $("openAddCrop2")
-                .addEventListener(
-                    "click",
-                    openCropModal
-                );
+        /* =================================================
+           COMMODITY SELECT
+        ================================================= */
+
+        const commoditySelect =
+            $("commoditySelect");
+
+
+        if (commoditySelect) {
+
+            commoditySelect.addEventListener(
+                "change",
+                updateForecastButton
+            );
         }
 
 
-        /* Cancel crop */
+        /* =================================================
+           FORECAST BUTTON
+        ================================================= */
 
-        if ($("cancelCrop")) {
+        const loadForecastBtn =
+            $("loadForecastBtn");
 
-            $("cancelCrop")
-                .addEventListener(
-                    "click",
-                    closeCropModal
-                );
 
+        if (loadForecastBtn) {
+
+            loadForecastBtn.addEventListener(
+                "click",
+                loadForecast
+            );
         }
 
 
-        /* Close modal by clicking overlay */
+        /* =================================================
+           MOBILE MENU
+        ================================================= */
 
-        if ($("cropOverlay")) {
+        const menuToggle =
+            $("menuToggle");
 
-            $("cropOverlay")
-                .addEventListener(
-                    "click",
-                    (event) => {
 
-                        if (
-                            event.target.id ===
-                            "cropOverlay"
-                        ) {
+        if (menuToggle) {
 
-                            closeCropModal();
-
-                        }
-
-                    }
-                );
-
+            menuToggle.addEventListener(
+                "click",
+                toggleMobileMenu
+            );
         }
 
 
-        /* Logout */
-
-        if ($("logoutBtn")) {
-
-            $("logoutBtn")
-                .addEventListener(
-                    "click",
-                    () => {
-                        window.location.href =
-                            "/dashboard/logout";
-                    }
-                );
-
-        }
-
-
-        /* Market */
-
-        if ($("marketSelect")) {
-
-            $("marketSelect")
-                .addEventListener(
-                    "change",
-                    loadCommodities
-                );
-
-        }
-
-
-        if ($("commoditySelect")) {
-
-            $("commoditySelect")
-                .addEventListener(
-                    "change",
-                    updateForecastButton
-                );
-
-        }
-
-
-        if ($("loadForecastBtn")) {
-
-            $("loadForecastBtn")
-                .addEventListener(
-                    "click",
-                    loadForecast
-                );
-
-        }
-
-
-        /* Mobile menu */
-
-        if ($("menuToggle")) {
-
-            $("menuToggle")
-                .addEventListener(
-                    "click",
-                    () => {
-
-                        $("menuToggle")
-                            .classList
-                            .toggle("active");
-
-                        const sidebar =
-                            document.querySelector(
-                                ".sidebar"
-                            );
-
-                        if (sidebar) {
-
-                            sidebar
-                                .classList
-                                .toggle(
-                                    "collapsed"
-                                );
-
-                        }
-
-                    }
-                );
-
-        }
-
-
-        /* Load markets */
+        /* =================================================
+           LOAD MARKETS
+        ================================================= */
 
         loadMarkets();
     }
 
 
-    init();
+    /* =====================================================
+       START
+    ====================================================== */
+
+    if (
+        document.readyState ===
+        "loading"
+    ) {
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            init
+        );
+
+    } else {
+
+        init();
+    }
 
 })();

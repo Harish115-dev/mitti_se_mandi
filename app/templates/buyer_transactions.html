@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Mitti Se Mandi — My Orders</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/buyer_dashboard.css') }}"
+    >
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Inter, Arial, sans-serif;
+            background: #f6f7f2;
+            color: #25352a;
+        }
+
+        .orders-page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            margin: 0 0 6px;
+            font-size: 2rem;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #6b756d;
+        }
+
+        .back-btn {
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 10px;
+            background: #244b2f;
+            color: white;
+            font-weight: 600;
+        }
+
+        .orders-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .order-card {
+            background: white;
+            border: 1px solid #e2e7e2;
+            border-radius: 16px;
+            padding: 22px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.04);
+        }
+
+        .order-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: flex-start;
+            margin-bottom: 18px;
+        }
+
+        .crop-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .muted {
+            color: #6b756d;
+            font-size: 0.9rem;
+        }
+
+        .status {
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: capitalize;
+            background: #fff3cd;
+            color: #795700;
+        }
+
+        .details {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .detail-box {
+            background: #f7f9f6;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        .detail-label {
+            display: block;
+            font-size: 0.78rem;
+            color: #748078;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            font-weight: 700;
+        }
+
+        .section {
+            border-top: 1px solid #edf0ed;
+            padding-top: 16px;
+            margin-top: 16px;
+        }
+
+        .section-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .farmer-info {
+            line-height: 1.7;
+        }
+
+        .payment-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .payment-status {
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: #eef5ee;
+            color: #2e6338;
+            font-weight: 700;
+            text-transform: capitalize;
+        }
+
+        .empty {
+            background: white;
+            border: 1px dashed #ccd4cd;
+            border-radius: 16px;
+            padding: 50px 20px;
+            text-align: center;
+            color: #6b756d;
+        }
+
+        @media (max-width: 800px) {
+
+            .orders-page {
+                padding: 20px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .details {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 520px) {
+
+            .details {
+                grid-template-columns: 1fr;
+            }
+
+            .order-top {
+                flex-direction: column;
+            }
+
+            .payment-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="orders-page">
+
+    <div class="page-header">
+
+        <div>
+            <h1>My Orders</h1>
+
+            <p>
+                Track your purchases, transactions and payments.
+            </p>
+        </div>
+
+        <a
+            href="{{ url_for('dashboard.buyer_dashboard') }}"
+            class="back-btn"
+        >
+            ← Dashboard
+        </a>
+
+    </div>
+
+
+    {% if transactions %}
+
+        <div class="orders-grid">
+
+            {% for transaction in transactions %}
+
+                <div class="order-card">
+
+                    <div class="order-top">
+
+                        <div>
+
+                            <div class="crop-title">
+                                {{ transaction.crop_name }}
+                            </div>
+
+                            <div class="muted">
+                                Transaction #{{ transaction.transaction_id }}
+                                · Offer #{{ transaction.offer_id }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="status">
+                            {{ transaction.transaction_status }}
+                        </div>
+
+                    </div>
+
+
+                    <div class="details">
+
+                        <div class="detail-box">
+
+                            <span class="detail-label">
+                                Farmer
+                            </span>
+
+                            <div class="detail-value">
+                                {{ transaction.farmer_name }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="detail-box">
+
+                            <span class="detail-label">
+                                Quantity
+                            </span>
+
+                            <div class="detail-value">
+                                {{ transaction.quantity }}
+                                {{ transaction.quantity_unit }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="detail-box">
+
+                            <span class="detail-label">
+                                Agreed Price
+                            </span>
+
+                            <div class="detail-value">
+                                ₹{{ transaction.agreed_price }}
+                            </div>
+
+                        </div>
+
+
+                        <div class="detail-box">
+
+                            <span class="detail-label">
+                                Total Amount
+                            </span>
+
+                            <div class="detail-value">
+                                ₹{{ transaction.total_amount }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="section">
+
+                        <div class="section-title">
+                            Farmer Details
+                        </div>
+
+                        <div class="farmer-info">
+
+                            {{ transaction.farmer_name }}
+
+                            {% if transaction.farmer_email %}
+                                <br>
+                                {{ transaction.farmer_email }}
+                            {% endif %}
+
+                            {% if transaction.farmer_phone %}
+                                <br>
+                                {{ transaction.farmer_phone }}
+                            {% endif %}
+
+                            {% if transaction.farmer_city %}
+                                <br>
+                                {{ transaction.farmer_city }}
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="section">
+
+                        <div class="payment-row">
+
+                            <div>
+
+                                <div class="section-title">
+                                    Payment
+                                </div>
+
+                                <div class="muted">
+                                    Amount:
+                                    ₹{{ transaction.payment_amount or transaction.total_amount }}
+                                </div>
+
+                            </div>
+
+
+                            <div class="payment-status">
+
+                                {{ transaction.payment_status or "pending" }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="section">
+
+                        <div class="muted">
+
+                            Market:
+                            {{ transaction.market_name or "—" }}
+
+                            ·
+
+                            Grade:
+                            {{ transaction.grade or "—" }}
+
+                            ·
+
+                            Location:
+                            {{ transaction.location or "—" }}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div class="empty">
+
+            <h3>No orders yet</h3>
+
+            <p>
+                Accepted offers will appear here as orders.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>

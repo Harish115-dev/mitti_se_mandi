@@ -21,6 +21,7 @@
     <aside class="sidebar">
 
         <div class="brand">
+
             <img
                 src="{{ url_for('static', filename='images/logo.png') }}"
                 alt="Mitti Se Mandi"
@@ -30,65 +31,84 @@
                 <h2>Mitti Se Mandi</h2>
                 <span>Buyer Portal</span>
             </div>
+
         </div>
 
 
         <nav class="sidebar-nav">
 
-            <a href="#overview" class="nav-link active">
+            <a
+                href="#overview"
+                class="nav-link active"
+            >
                 Dashboard
             </a>
 
-            <a href="#matches" class="nav-link">
-                Farmer Matches
-            </a>
 
-            <a href="#requirements" class="nav-link">
+            <a
+                href="#requirements"
+                class="nav-link"
+            >
                 My Requirements
             </a>
 
-            <a href="#add-requirement" class="nav-link">
+
+            <a
+                href="#add-requirement"
+                class="nav-link"
+            >
                 Add Requirement
+            </a>
+
+
+            <a
+                href="#matches"
+                class="nav-link"
+            >
+                Farmer Matches
+            </a>
+
+
+            <!-- MY OFFERS -->
+            <a
+                href="{{ url_for('offers.buyer_offers') }}"
+                class="nav-link"
+            >
+                My Offers
+            </a>
+
+
+            <!-- MY ORDERS -->
+            <a
+                href="{{ url_for('transactions.buyer_transactions') }}"
+                class="nav-link"
+            >
+                My Orders
             </a>
 
         </nav>
 
 
-        <div class="sidebar-bottom">
-
-            <div class="sidebar-user">
-
-                <span class="avatar">
-                    {{ buyer.full_name[0] | upper }}
-                </span>
-
-                <div>
-                    <strong>{{ buyer.full_name }}</strong>
-                    <small>Buyer</small>
-                </div>
-
-            </div>
-
-            <a
-                href="{{ url_for('dashboard.logout') }}"
-                class="logout-btn"
-            >
-                Logout
-            </a>
-
-        </div>
+        <!-- LOGOUT -->
+        <a
+            href="{{ url_for('auth.logout') }}"
+            class="logout-btn"
+        >
+            Logout
+        </a>
 
     </aside>
-
 
 
     <!-- ================= MAIN ================= -->
     <main class="main-content">
 
-        <!-- TOPBAR -->
+
+        <!-- ================= TOPBAR ================= -->
         <header class="topbar">
 
             <div>
+
                 <span class="eyebrow">
                     BUYER PORTAL
                 </span>
@@ -100,6 +120,7 @@
                 <p>
                     Manage purchasing demand and connect with suitable farmer listings.
                 </p>
+
             </div>
 
 
@@ -110,8 +131,15 @@
                 </span>
 
                 <div>
-                    <strong>{{ buyer.full_name }}</strong>
-                    <small>{{ buyer.email }}</small>
+
+                    <strong>
+                        {{ buyer.full_name }}
+                    </strong>
+
+                    <small>
+                        {{ buyer.email }}
+                    </small>
+
                 </div>
 
             </div>
@@ -120,7 +148,7 @@
 
 
 
-        <!-- HERO -->
+        <!-- ================= HERO ================= -->
         <section
             id="overview"
             class="hero-panel"
@@ -153,6 +181,7 @@
                     + Add Requirement
                 </a>
 
+
                 <a
                     href="#matches"
                     class="btn btn-light"
@@ -166,50 +195,89 @@
 
 
 
-        <!-- STATS -->
+        <!-- ================= STATS ================= -->
         <section class="stats-grid">
 
             <div class="stat-card">
-                <span>Requirements</span>
-                <strong>{{ requirements|length }}</strong>
-                <small>Total purchase demand</small>
+
+                <span>
+                    Requirements
+                </span>
+
+                <strong>
+                    {{ requirements|length }}
+                </strong>
+
+                <small>
+                    Total purchase demand
+                </small>
+
             </div>
 
 
             <div class="stat-card">
-                <span>Active Demand</span>
-                <strong>{{ active_requirements }}</strong>
-                <small>Currently sourcing</small>
+
+                <span>
+                    Active Demand
+                </span>
+
+                <strong>
+                    {{ active_requirements }}
+                </strong>
+
+                <small>
+                    Currently sourcing
+                </small>
+
             </div>
 
 
             <div class="stat-card">
-                <span>Farmer Matches</span>
-                <strong>{{ matches|length }}</strong>
-                <small>Active marketplace listings</small>
+
+                <span>
+                    Farmer Matches
+                </span>
+
+                <strong>
+                    {{ matches|length }}
+                </strong>
+
+                <small>
+                    Active marketplace listings
+                </small>
+
             </div>
 
 
             <div class="stat-card">
-                <span>Account</span>
+
+                <span>
+                    Account
+                </span>
 
                 <strong class="status-value">
+
                     {% if buyer.is_verified %}
                         Verified
                     {% else %}
                         Pending
                     {% endif %}
+
                 </strong>
 
-                <small>Buyer verification</small>
+                <small>
+                    Buyer verification
+                </small>
+
             </div>
 
         </section>
 
 
 
-        <!-- ACTIVE DEMAND + MATCH SUMMARY -->
+        <!-- ================= ACTIVE DEMAND + MATCH SUMMARY ================= -->
         <section class="overview-grid">
+
 
             <!-- ACTIVE REQUIREMENT -->
             <div class="panel">
@@ -217,6 +285,7 @@
                 <div class="panel-header">
 
                     <div>
+
                         <span class="section-label">
                             PURCHASE DEMAND
                         </span>
@@ -224,7 +293,9 @@
                         <h2>
                             Active Requirements
                         </h2>
+
                     </div>
+
 
                     <a href="#requirements">
                         View all
@@ -255,13 +326,17 @@
                                 <div class="demand-info">
 
                                     <strong>
+
                                         {{ requirement.crop_name }}
 
                                         {% if requirement.variety %}
+
                                             <span>
                                                 · {{ requirement.variety }}
                                             </span>
+
                                         {% endif %}
+
                                     </strong>
 
 
@@ -299,8 +374,15 @@
                 {% else %}
 
                     <div class="empty-small">
-                        <strong>No active requirements</strong>
-                        <span>Create a requirement to start sourcing.</span>
+
+                        <strong>
+                            No active requirements
+                        </strong>
+
+                        <span>
+                            Create a requirement to start sourcing.
+                        </span>
+
                     </div>
 
                 {% endif %}
@@ -315,6 +397,7 @@
                 <div class="panel-header">
 
                     <div>
+
                         <span class="section-label">
                             MARKETPLACE
                         </span>
@@ -322,7 +405,9 @@
                         <h2>
                             Match Overview
                         </h2>
+
                     </div>
+
 
                     <a href="#matches">
                         Open
@@ -338,6 +423,7 @@
                     </div>
 
                     <div>
+
                         <strong>
                             Available listings
                         </strong>
@@ -345,6 +431,7 @@
                         <small>
                             Matching your active requirements
                         </small>
+
                     </div>
 
                 </div>
@@ -359,6 +446,7 @@
                             <div class="mini-match">
 
                                 <div>
+
                                     <strong>
                                         {{ match.crop_name }}
                                     </strong>
@@ -366,6 +454,7 @@
                                     <small>
                                         {{ match.farmer_name }}
                                     </small>
+
                                 </div>
 
 
@@ -375,8 +464,10 @@
 
                                         {% if match.match_status == 'Full Match' %}
                                             full-match
+
                                         {% elif match.match_status == 'Partial Match' %}
                                             partial-match
+
                                         {% else %}
                                             low-match
                                         {% endif %}
@@ -394,8 +485,15 @@
                 {% else %}
 
                     <div class="empty-small">
-                        <strong>No matches yet</strong>
-                        <span>Matches will appear here.</span>
+
+                        <strong>
+                            No matches yet
+                        </strong>
+
+                        <span>
+                            Matches will appear here.
+                        </span>
+
                     </div>
 
                 {% endif %}
@@ -415,6 +513,7 @@
             <div class="section-heading">
 
                 <div>
+
                     <span class="section-label">
                         MARKETPLACE
                     </span>
@@ -426,6 +525,7 @@
                     <p>
                         Compare available farmer listings before making an offer.
                     </p>
+
                 </div>
 
             </div>
@@ -439,7 +539,8 @@
 
                         <article class="match-card">
 
-                            <!-- Header -->
+
+                            <!-- HEADER -->
                             <div class="match-head">
 
                                 <div class="match-farmer">
@@ -474,50 +575,66 @@
                             </div>
 
 
-                            <!-- Main facts -->
+                            <!-- MAIN FACTS -->
                             <div class="match-facts">
 
                                 <div>
-                                    <span>Quantity</span>
+
+                                    <span>
+                                        Quantity
+                                    </span>
 
                                     <strong>
                                         {{ match.quantity }}
                                         {{ match.quantity_unit or "quintal" }}
                                     </strong>
+
                                 </div>
 
 
                                 <div>
-                                    <span>Grade</span>
+
+                                    <span>
+                                        Grade
+                                    </span>
 
                                     <strong>
                                         {{ match.grade or "Any" }}
                                     </strong>
+
                                 </div>
 
 
                                 <div>
-                                    <span>Asking Price</span>
+
+                                    <span>
+                                        Asking Price
+                                    </span>
 
                                     <strong>
                                         ₹{{ match.expected_price }}
                                         /{{ match.quantity_unit or "quintal" }}
                                     </strong>
+
                                 </div>
 
 
                                 <div>
-                                    <span>Market</span>
+
+                                    <span>
+                                        Market
+                                    </span>
 
                                     <strong>
                                         {{ match.market_name or "—" }}
                                     </strong>
+
                                 </div>
 
                             </div>
 
 
-                            <!-- Match checks -->
+                            <!-- MATCH CHECKS -->
                             <div class="match-checks">
 
                                 {% for check in match.checks %}
@@ -525,6 +642,7 @@
                                     <span
                                         class="
                                             check-tag
+
                                             {% if check.passed %}
                                                 check-pass
                                             {% else %}
@@ -548,7 +666,7 @@
                             </div>
 
 
-                            <!-- Action -->
+                            <!-- ACTION -->
                             <div class="match-footer">
 
                                 <div class="match-note">
@@ -628,6 +746,7 @@
             <div class="section-heading">
 
                 <div>
+
                     <span class="section-label">
                         YOUR DEMAND
                     </span>
@@ -639,6 +758,7 @@
                     <p>
                         Manage your current purchase requirements.
                     </p>
+
                 </div>
 
 
@@ -660,6 +780,7 @@
 
                         <article class="requirement-card">
 
+
                             <div class="requirement-main">
 
                                 <div>
@@ -673,9 +794,11 @@
                                         {{ requirement.crop_name }}
 
                                         {% if requirement.variety %}
+
                                             <span>
                                                 · {{ requirement.variety }}
                                             </span>
+
                                         {% endif %}
 
                                     </h3>
@@ -689,6 +812,7 @@
 
                                         {% if requirement.status == 'active' %}
                                             status-active
+
                                         {% else %}
                                             status-closed
                                         {% endif %}
@@ -703,7 +827,10 @@
                             <div class="requirement-facts">
 
                                 <div>
-                                    <span>Quantity</span>
+
+                                    <span>
+                                        Quantity
+                                    </span>
 
                                     <strong>
 
@@ -718,39 +845,56 @@
                                         {{ requirement.quantity_unit }}
 
                                     </strong>
+
                                 </div>
 
 
                                 <div>
-                                    <span>Grade</span>
+
+                                    <span>
+                                        Grade
+                                    </span>
 
                                     <strong>
                                         {{ requirement.required_grade or "Any" }}
                                     </strong>
+
                                 </div>
 
 
                                 <div>
-                                    <span>Location</span>
+
+                                    <span>
+                                        Location
+                                    </span>
 
                                     <strong>
                                         {{ requirement.preferred_location or "Any" }}
                                     </strong>
+
                                 </div>
 
 
                                 <div>
-                                    <span>Maximum Price</span>
+
+                                    <span>
+                                        Maximum Price
+                                    </span>
 
                                     <strong>
 
                                         {% if requirement.max_price is not none %}
+
                                             ₹{{ "%.2f"|format(requirement.max_price) }}
+
                                         {% else %}
+
                                             Any
+
                                         {% endif %}
 
                                     </strong>
+
                                 </div>
 
                             </div>
@@ -819,6 +963,7 @@
             <div class="section-heading">
 
                 <div>
+
                     <span class="section-label">
                         PURCHASE DEMAND
                     </span>
@@ -830,6 +975,7 @@
                     <p>
                         Define the produce, quantity, quality, location and price you need.
                     </p>
+
                 </div>
 
             </div>
@@ -844,7 +990,10 @@
 
                     <div class="form-grid">
 
+
+                        <!-- CROP -->
                         <div class="form-group">
+
                             <label for="crop_name">
                                 Crop *
                             </label>
@@ -856,10 +1005,13 @@
                                 placeholder="e.g. Onion"
                                 required
                             >
+
                         </div>
 
 
+                        <!-- VARIETY -->
                         <div class="form-group">
+
                             <label for="variety">
                                 Variety
                             </label>
@@ -870,10 +1022,13 @@
                                 name="variety"
                                 placeholder="e.g. Red Onion"
                             >
+
                         </div>
 
 
+                        <!-- MINIMUM QUANTITY -->
                         <div class="form-group">
+
                             <label for="min_quantity">
                                 Minimum Quantity
                             </label>
@@ -886,10 +1041,13 @@
                                 name="min_quantity"
                                 placeholder="e.g. 50"
                             >
+
                         </div>
 
 
+                        <!-- MAXIMUM QUANTITY -->
                         <div class="form-group">
+
                             <label for="max_quantity">
                                 Maximum Quantity
                             </label>
@@ -902,10 +1060,13 @@
                                 name="max_quantity"
                                 placeholder="e.g. 200"
                             >
+
                         </div>
 
 
+                        <!-- QUANTITY UNIT -->
                         <div class="form-group">
+
                             <label for="quantity_unit">
                                 Quantity Unit
                             </label>
@@ -914,6 +1075,7 @@
                                 id="quantity_unit"
                                 name="quantity_unit"
                             >
+
                                 <option value="quintal">
                                     Quintal
                                 </option>
@@ -925,11 +1087,15 @@
                                 <option value="ton">
                                     Ton
                                 </option>
+
                             </select>
+
                         </div>
 
 
+                        <!-- GRADE -->
                         <div class="form-group">
+
                             <label for="required_grade">
                                 Required Grade
                             </label>
@@ -938,6 +1104,7 @@
                                 id="required_grade"
                                 name="required_grade"
                             >
+
                                 <option value="">
                                     Any Grade
                                 </option>
@@ -953,11 +1120,15 @@
                                 <option value="C">
                                     Grade C
                                 </option>
+
                             </select>
+
                         </div>
 
 
+                        <!-- LOCATION -->
                         <div class="form-group">
+
                             <label for="preferred_location">
                                 Preferred Location
                             </label>
@@ -968,10 +1139,13 @@
                                 name="preferred_location"
                                 placeholder="e.g. Nashik"
                             >
+
                         </div>
 
 
+                        <!-- MAX PRICE -->
                         <div class="form-group">
+
                             <label for="max_price">
                                 Maximum Price
                             </label>
@@ -984,11 +1158,13 @@
                                 name="max_price"
                                 placeholder="₹ per quintal"
                             >
+
                         </div>
 
                     </div>
 
 
+                    <!-- FORM ACTIONS -->
                     <div class="form-actions">
 
                         <button
