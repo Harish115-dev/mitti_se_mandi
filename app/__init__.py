@@ -37,6 +37,7 @@ def create_app():
     from app.routes.crops import crops_bp
     from app.routes.transactions import transactions_bp
     from app.routes.buyer_requirements import buyer_requirements_bp
+    from app.routes.payments import payments_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -47,6 +48,7 @@ def create_app():
     app.register_blueprint(crops_bp)
     app.register_blueprint(transactions_bp)
     app.register_blueprint(buyer_requirements_bp)
+    app.register_blueprint(payments_bp)
 
     @app.route("/")
     @app.route("/index")

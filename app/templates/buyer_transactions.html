@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Mitti Se Mandi — My Orders</title>
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/buyer_dashboard.css') }}"
-    >
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/buyer_dashboard.css') }}">
 
     <style>
         body {
@@ -52,6 +51,10 @@
             font-weight: 600;
         }
 
+        .back-btn:hover {
+            background: #1d3e26;
+        }
+
         .orders-grid {
             display: grid;
             gap: 20px;
@@ -62,7 +65,7 @@
             border: 1px solid #e2e7e2;
             border-radius: 16px;
             padding: 22px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.04);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.04);
         }
 
         .order-top {
@@ -149,6 +152,40 @@
             text-transform: capitalize;
         }
 
+        .pay-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #31572c;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .pay-btn:hover {
+            background: #244522;
+            transform: translateY(-1px);
+        }
+
+        .paid-message {
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: #e8f5e9;
+            color: #23752d;
+            font-weight: 700;
+        }
+
+        .failed-message {
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: #fdecec;
+            color: #a52a2a;
+            font-weight: 700;
+        }
+
         .empty {
             background: white;
             border: 1px dashed #ccd4cd;
@@ -196,6 +233,7 @@
 
 <div class="orders-page">
 
+    <!-- PAGE HEADER -->
     <div class="page-header">
 
         <div>
@@ -206,10 +244,8 @@
             </p>
         </div>
 
-        <a
-            href="{{ url_for('dashboard.buyer_dashboard') }}"
-            class="back-btn"
-        >
+        <a href="{{ url_for('dashboard.buyer_dashboard') }}"
+           class="back-btn">
             ← Dashboard
         </a>
 
@@ -218,189 +254,231 @@
 
     {% if transactions %}
 
-        <div class="orders-grid">
+    <div class="orders-grid">
 
-            {% for transaction in transactions %}
+        {% for transaction in transactions %}
 
-                <div class="order-card">
+        <div class="order-card">
 
-                    <div class="order-top">
+            <!-- ORDER HEADER -->
+            <div class="order-top">
 
-                        <div>
+                <div>
 
-                            <div class="crop-title">
-                                {{ transaction.crop_name }}
-                            </div>
-
-                            <div class="muted">
-                                Transaction #{{ transaction.transaction_id }}
-                                · Offer #{{ transaction.offer_id }}
-                            </div>
-
-                        </div>
-
-
-                        <div class="status">
-                            {{ transaction.transaction_status }}
-                        </div>
-
+                    <div class="crop-title">
+                        {{ transaction.crop_name }}
                     </div>
 
-
-                    <div class="details">
-
-                        <div class="detail-box">
-
-                            <span class="detail-label">
-                                Farmer
-                            </span>
-
-                            <div class="detail-value">
-                                {{ transaction.farmer_name }}
-                            </div>
-
-                        </div>
-
-
-                        <div class="detail-box">
-
-                            <span class="detail-label">
-                                Quantity
-                            </span>
-
-                            <div class="detail-value">
-                                {{ transaction.quantity }}
-                                {{ transaction.quantity_unit }}
-                            </div>
-
-                        </div>
-
-
-                        <div class="detail-box">
-
-                            <span class="detail-label">
-                                Agreed Price
-                            </span>
-
-                            <div class="detail-value">
-                                ₹{{ transaction.agreed_price }}
-                            </div>
-
-                        </div>
-
-
-                        <div class="detail-box">
-
-                            <span class="detail-label">
-                                Total Amount
-                            </span>
-
-                            <div class="detail-value">
-                                ₹{{ transaction.total_amount }}
-                            </div>
-
-                        </div>
-
+                    <div class="muted">
+                        Transaction #{{ transaction.transaction_id }}
+                        · Offer #{{ transaction.offer_id }}
                     </div>
 
+                </div>
 
-                    <div class="section">
+                <div class="status">
+                    {{ transaction.transaction_status }}
+                </div>
 
-                        <div class="section-title">
-                            Farmer Details
-                        </div>
+            </div>
 
-                        <div class="farmer-info">
 
-                            {{ transaction.farmer_name }}
+            <!-- ORDER DETAILS -->
+            <div class="details">
 
-                            {% if transaction.farmer_email %}
-                                <br>
-                                {{ transaction.farmer_email }}
-                            {% endif %}
+                <div class="detail-box">
 
-                            {% if transaction.farmer_phone %}
-                                <br>
-                                {{ transaction.farmer_phone }}
-                            {% endif %}
+                    <span class="detail-label">
+                        Farmer
+                    </span>
 
-                            {% if transaction.farmer_city %}
-                                <br>
-                                {{ transaction.farmer_city }}
-                            {% endif %}
-
-                        </div>
-
+                    <div class="detail-value">
+                        {{ transaction.farmer_name }}
                     </div>
 
-
-                    <div class="section">
-
-                        <div class="payment-row">
-
-                            <div>
-
-                                <div class="section-title">
-                                    Payment
-                                </div>
-
-                                <div class="muted">
-                                    Amount:
-                                    ₹{{ transaction.payment_amount or transaction.total_amount }}
-                                </div>
-
-                            </div>
+                </div>
 
 
-                            <div class="payment-status">
+                <div class="detail-box">
 
-                                {{ transaction.payment_status or "pending" }}
+                    <span class="detail-label">
+                        Quantity
+                    </span>
 
-                            </div>
+                    <div class="detail-value">
 
-                        </div>
-
-                    </div>
-
-
-                    <div class="section">
-
-                        <div class="muted">
-
-                            Market:
-                            {{ transaction.market_name or "—" }}
-
-                            ·
-
-                            Grade:
-                            {{ transaction.grade or "—" }}
-
-                            ·
-
-                            Location:
-                            {{ transaction.location or "—" }}
-
-                        </div>
+                        {{ transaction.quantity }}
+                        {{ transaction.quantity_unit }}
 
                     </div>
 
                 </div>
 
-            {% endfor %}
+
+                <div class="detail-box">
+
+                    <span class="detail-label">
+                        Agreed Price
+                    </span>
+
+                    <div class="detail-value">
+                        ₹{{ transaction.agreed_price }}
+                    </div>
+
+                </div>
+
+
+                <div class="detail-box">
+
+                    <span class="detail-label">
+                        Total Amount
+                    </span>
+
+                    <div class="detail-value">
+                        ₹{{ transaction.total_amount }}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- FARMER DETAILS -->
+            <div class="section">
+
+                <div class="section-title">
+                    Farmer Details
+                </div>
+
+                <div class="farmer-info">
+
+                    {{ transaction.farmer_name }}
+
+                    {% if transaction.farmer_email %}
+                    <br>
+                    {{ transaction.farmer_email }}
+                    {% endif %}
+
+                    {% if transaction.farmer_phone %}
+                    <br>
+                    {{ transaction.farmer_phone }}
+                    {% endif %}
+
+                    {% if transaction.farmer_city %}
+                    <br>
+                    {{ transaction.farmer_city }}
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- PAYMENT -->
+            <div class="section">
+
+                <div class="payment-row">
+
+                    <div>
+
+                        <div class="section-title">
+                            Payment
+                        </div>
+
+                        <div class="muted">
+                            Amount:
+                            ₹{{ transaction.payment_amount or transaction.total_amount }}
+                        </div>
+
+                    </div>
+
+
+                    <!-- PENDING PAYMENT -->
+                    {% if transaction.payment_status == 'pending'
+                          and transaction.transaction_status == 'pending' %}
+
+                        <a
+                            href="{{ url_for(
+                                'payments.create_payment',
+                                transaction_id=transaction.transaction_id
+                            ) }}"
+                            class="pay-btn"
+                        >
+                            Pay Now
+                        </a>
+
+
+                    <!-- PAID PAYMENT -->
+                    {% elif transaction.payment_status == 'paid' %}
+
+                        <div class="paid-message">
+                            ✓ Paid
+                        </div>
+
+
+                    <!-- FAILED PAYMENT -->
+                    {% elif transaction.payment_status == 'failed' %}
+
+                        <div class="failed-message">
+                            Payment Failed
+                        </div>
+
+
+                    <!-- OTHER STATUS -->
+                    {% else %}
+
+                        <div class="payment-status">
+                            {{ transaction.payment_status or 'Pending' }}
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- MARKET DETAILS -->
+            <div class="section">
+
+                <div class="muted">
+
+                    Market:
+                    {{ transaction.market_name or "—" }}
+
+                    ·
+
+                    Grade:
+                    {{ transaction.grade or "—" }}
+
+                    ·
+
+                    Location:
+                    {{ transaction.location or "—" }}
+
+                </div>
+
+            </div>
 
         </div>
+
+        {% endfor %}
+
+    </div>
+
 
     {% else %}
 
-        <div class="empty">
+    <!-- EMPTY STATE -->
+    <div class="empty">
 
-            <h3>No orders yet</h3>
+        <h3>No orders yet</h3>
 
-            <p>
-                Accepted offers will appear here as orders.
-            </p>
+        <p>
+            Accepted offers will appear here as orders.
+        </p>
 
-        </div>
+    </div>
 
     {% endif %}
 
